@@ -289,7 +289,7 @@ theorem relation_comp_mem
       M.S ((a + c) + b)
         (fun xyz : Power R ((a + c) + b) =>
           G (compGArg (R := R) (a := a) (b := b) (c := c) xyz)) := by
-    simpa [compGArg] using
+    simpa [compGArg] using!
       (M.reindex_mem
         (fun i : Fin (a + b) => compGIndex (a := a) (b := b) (c := c) i)
         hG)
@@ -297,7 +297,7 @@ theorem relation_comp_mem
       M.S ((a + c) + b)
         (fun xyz : Power R ((a + c) + b) =>
           H (compHArg (R := R) (a := a) (b := b) (c := c) xyz)) := by
-    simpa [compHArg] using
+    simpa [compHArg] using!
       (M.reindex_mem
         (fun i : Fin (b + c) => compHIndex (a := a) (b := b) (c := c) i)
         hH)
@@ -314,7 +314,7 @@ theorem relation_comp_mem
             G (compGArg (R := R) (a := a) (b := b) (c := c) (Power.append xz y)) /\
             H (compHArg (R := R) (a := a) (b := b) (c := c) (Power.append xz y))) :=
     M.existsLast_mem hBoth
-  simpa [RelationComp, compGArg_append, compHArg_append] using hProj
+  simpa [RelationComp, compGArg_append, compHArg_append] using! hProj
 
 theorem relationComp_functionGraph_eq {m n p : Nat}
     {A : Set (Power R m)} {B : Set (Power R n)} {C : Set (Power R p)}
@@ -333,10 +333,10 @@ theorem relationComp_functionGraph_eq {m n p : Nat}
     rcases h with ⟨y, hf, hg⟩
     have hf' : exists hx : A (Power.left xz),
         y = (f (Subtype.mk (Power.left xz) hx)).1 := by
-      simpa [FunctionGraph] using hf
+      simpa [FunctionGraph] using! hf
     have hg' : exists hy : B y,
         Power.right xz = (g (Subtype.mk y hy)).1 := by
-      simpa [FunctionGraph] using hg
+      simpa [FunctionGraph] using! hg
     rcases hf' with ⟨hx, hfy⟩
     rcases hg' with ⟨hy, hgz⟩
     refine ⟨hx, ?_⟩
@@ -344,7 +344,7 @@ theorem relationComp_functionGraph_eq {m n p : Nat}
         f (Subtype.mk (Power.left xz) hx) := by
       apply Subtype.ext
       exact hfy
-    simpa [FunctionGraph, hsub] using hgz
+    simpa [FunctionGraph, hsub] using! hgz
   · intro h
     rcases h with ⟨hx, hxz⟩
     let y : Power R n := (f (Subtype.mk (Power.left xz) hx)).1
@@ -354,12 +354,12 @@ theorem relationComp_functionGraph_eq {m n p : Nat}
       have hfCore : exists hx0 : A (Power.left xz),
           y = (f (Subtype.mk (Power.left xz) hx0)).1 := by
         exact Exists.intro hx rfl
-      simpa [FunctionGraph] using hfCore
+      simpa [FunctionGraph] using! hfCore
     have hgProof :
         FunctionGraph (R := R) (m := n) (n := p) (A := B) (B := C) g
           (Power.append y (Power.right xz)) := by
       have hy : B y := by
-        simpa [y] using (f (Subtype.mk (Power.left xz) hx)).2
+        simpa [y] using! (f (Subtype.mk (Power.left xz) hx)).2
       have hsub : (Subtype.mk y hy : {y : Power R n // B y}) =
           f (Subtype.mk (Power.left xz) hx) := by
         apply Subtype.ext
@@ -367,8 +367,8 @@ theorem relationComp_functionGraph_eq {m n p : Nat}
       have hgCore : exists hy0 : B y,
           Power.right xz = (g (Subtype.mk y hy0)).1 := by
         refine Exists.intro hy ?_
-        simpa [y, hsub] using hxz
-      simpa [FunctionGraph] using hgCore
+        simpa [y, hsub] using! hxz
+      simpa [FunctionGraph] using! hgCore
     exact Exists.intro y (And.intro hfProof hgProof)
 
 structure DefinableFunction (M : OMinimalStructure D) {m n : Nat}
@@ -514,7 +514,7 @@ theorem functionImage_mem_of_graph_mem
         (fun yx : Power R (n + m) =>
           FunctionGraph (R := R) (m := m) (n := n) (A := A) (B := B) f
             (imageGraphArg (R := R) (m := m) (n := n) yx)) := by
-    simpa [imageGraphArg] using
+    simpa [imageGraphArg] using!
       (M.reindex_mem
         (fun i : Fin (m + n) => imageGraphIndex (m := m) (n := n) i)
         hGraph)
@@ -523,14 +523,14 @@ theorem functionImage_mem_of_graph_mem
         (fun y : Power R n => exists x : Power R m,
           FunctionGraph (R := R) (m := m) (n := n) (A := A) (B := B) f
             (imageGraphArg (R := R) (m := m) (n := n) (Power.append y x))) := by
-    simpa using (M.existsLast_mem (n := n) (m := m) hSwap)
+    simpa using! (M.existsLast_mem (n := n) (m := m) hSwap)
   have hProj' :
       M.S n
         (fun y : Power R n => exists x : Power R m,
           FunctionGraph (R := R) (m := m) (n := n) (A := A) (B := B) f
             (Power.append x y)) := by
-    simpa [imageGraphArg_append] using hProj
-  simpa [FunctionImage, FunctionGraph] using hProj'
+    simpa [imageGraphArg_append] using! hProj
+  simpa [FunctionImage, FunctionGraph] using! hProj'
 
 /--
 Main image theorem for `DefinableFunction`:
@@ -563,7 +563,7 @@ theorem DefinableFunction.image_mem
     {A : Set (Power R m)} {B : Set (Power R n)}
     (f : DefinableFunction M A B) :
     M.S n (f.image) := by
-  simpa [DefinableFunction.image] using
+  simpa [DefinableFunction.image] using!
     functionImage_mem (R := R) (D := D) M f
 
 /--
@@ -575,7 +575,7 @@ theorem DefinableFunction.image_subset_codomain
     {A : Set (Power R m)} {B : Set (Power R n)}
     (f : DefinableFunction M A B) :
     f.image <= B := by
-  simpa [DefinableFunction.image] using
+  simpa [DefinableFunction.image] using!
     functionImage_subset_codomain (R := R) (A := A) (B := B) f.toFun
 
 
@@ -646,24 +646,24 @@ theorem holdsAt_mem (M : OMinimalStructure D)
     {n m : Nat} {A : Set (Power R n)} (sigma : Fin n -> Fin m)
     (hA : M.S n A) :
     M.S m (HoldsAt A sigma) := by
-  simpa [HoldsAt] using M.reindex_mem sigma hA
+  simpa [HoldsAt] using! M.reindex_mem sigma hA
 
 theorem domainOn_mem (M : OMinimalStructure D)
     {n : Nat} {I : Set (Power R 1)} (hI : M.S 1 I) (i : Fin n) :
     M.S n (DomainOn I i) := by
-  simpa [DomainOn] using
+  simpa [DomainOn] using!
     (holdsAt_mem (R := R) (D := D) M (fun _ : Fin 1 => i) hI)
 
 theorem graphOn_mem (M : OMinimalStructure D)
     {n : Nat} {G : Set (Power R 2)} (hG : M.S 2 G) (i j : Fin n) :
     M.S n (GraphOn G i j) := by
-  simpa [GraphOn] using
+  simpa [GraphOn] using!
     (holdsAt_mem (R := R) (D := D) M (pairIndex i j) hG)
 
 theorem ltOn_mem (M : OMinimalStructure D)
     {n : Nat} (i j : Fin n) :
     M.S n (LtOn D i j) := by
-  simpa [LtOn] using
+  simpa [LtOn] using!
     (holdsAt_mem (R := R) (D := D) M (pairIndex i j) M.lt_mem)
 
 def ValueIntervalAt (D : DenseLinearOrderNoEndpoints R)
@@ -743,7 +743,7 @@ theorem counterExists6_mem (M : OMinimalStructure D)
     {I : Set (Power R 1)} {G : Set (Power R 2)}
     (hI : M.S 1 I) (hG : M.S 2 G) :
     M.S 6 (CounterExists6 D I G) := by
-  simpa [CounterExists6] using
+  simpa [CounterExists6] using!
     (M.existsLast_mem (n := 6) (m := 2)
       (counter8_mem (R := R) (D := D) M hI hG))
 
@@ -777,7 +777,7 @@ theorem goodExists4_mem (M : OMinimalStructure D)
     {I : Set (Power R 1)} {G : Set (Power R 2)}
     (hI : M.S 1 I) (hG : M.S 2 G) :
     M.S 4 (GoodExists4 D I G) := by
-  simpa [GoodExists4] using
+  simpa [GoodExists4] using!
     (M.existsLast_mem (n := 4) (m := 2)
       (good6_mem (R := R) (D := D) M hI hG))
 
@@ -806,7 +806,7 @@ theorem badPoint1_mem (M : OMinimalStructure D)
     {I : Set (Power R 1)} {G : Set (Power R 2)}
     (hI : M.S 1 I) (hG : M.S 2 G) :
     M.S 1 (BadPoint1 D I G) := by
-  simpa [BadPoint1] using
+  simpa [BadPoint1] using!
     (M.existsLast_mem (n := 1) (m := 3)
       (bad4_mem (R := R) (D := D) M hI hG))
 
@@ -859,7 +859,7 @@ def EqOn {n : Nat} (i j : Fin n) : Set (Power R n) :=
 theorem eqOn_mem_of_lt (M : OMinimalStructure D)
     {n : Nat} (i j : Fin n) (hij : i < j) :
     M.S n (EqOn (R := R) i j) := by
-  simpa [EqOn] using M.diagonal_mem i j hij
+  simpa [EqOn] using! M.diagonal_mem i j hij
 
 -- Variables in arity 6 are ordered as x,c,d,v,y,w.
 def LocalConstCounter6 (D : DenseLinearOrderNoEndpoints R)
@@ -908,7 +908,7 @@ theorem localConstCounterExists4_mem (M : OMinimalStructure D)
     {I : Set (Power R 1)} {G : Set (Power R 2)}
     (hI : M.S 1 I) (hG : M.S 2 G) :
     M.S 4 (LocalConstCounterExists4 D I G) := by
-  simpa [LocalConstCounterExists4] using
+  simpa [LocalConstCounterExists4] using!
     (M.existsLast_mem (n := 4) (m := 2)
       (localConstCounter6_mem (R := R) (D := D) M hI hG))
 
@@ -941,7 +941,7 @@ theorem localConstGoodPoint1_mem (M : OMinimalStructure D)
     {I : Set (Power R 1)} {G : Set (Power R 2)}
     (hI : M.S 1 I) (hG : M.S 2 G) :
     M.S 1 (LocalConstGoodPoint1 D I G) := by
-  simpa [LocalConstGoodPoint1] using
+  simpa [LocalConstGoodPoint1] using!
     (M.existsLast_mem (n := 1) (m := 3)
       (localConstGood4_mem (R := R) (D := D) M hI hG))
 
@@ -1108,7 +1108,7 @@ theorem monoIncCounterExists3_mem (M : OMinimalStructure D)
     {I : Set (Power R 1)} {G : Set (Power R 2)}
     (hI : M.S 1 I) (hG : M.S 2 G) :
     M.S 3 (MonoIncCounterExists3 D I G) := by
-  simpa [MonoIncCounterExists3] using
+  simpa [MonoIncCounterExists3] using!
     (M.existsLast_mem (n := 3) (m := 4)
       (monoIncCounter7_mem (R := R) (D := D) M hI hG))
 
@@ -1116,7 +1116,7 @@ theorem monoDecCounterExists3_mem (M : OMinimalStructure D)
     {I : Set (Power R 1)} {G : Set (Power R 2)}
     (hI : M.S 1 I) (hG : M.S 2 G) :
     M.S 3 (MonoDecCounterExists3 D I G) := by
-  simpa [MonoDecCounterExists3] using
+  simpa [MonoDecCounterExists3] using!
     (M.existsLast_mem (n := 3) (m := 4)
       (monoDecCounter7_mem (R := R) (D := D) M hI hG))
 
@@ -1166,7 +1166,7 @@ theorem monoIncGoodPoint1_mem (M : OMinimalStructure D)
     {I : Set (Power R 1)} {G : Set (Power R 2)}
     (hI : M.S 1 I) (hG : M.S 2 G) :
     M.S 1 (MonoIncGoodPoint1 D I G) := by
-  simpa [MonoIncGoodPoint1] using
+  simpa [MonoIncGoodPoint1] using!
     (M.existsLast_mem (n := 1) (m := 2)
       (monoIncGood3_mem (R := R) (D := D) M hI hG))
 
@@ -1174,7 +1174,7 @@ theorem monoDecGoodPoint1_mem (M : OMinimalStructure D)
     {I : Set (Power R 1)} {G : Set (Power R 2)}
     (hI : M.S 1 I) (hG : M.S 2 G) :
     M.S 1 (MonoDecGoodPoint1 D I G) := by
-  simpa [MonoDecGoodPoint1] using
+  simpa [MonoDecGoodPoint1] using!
     (M.existsLast_mem (n := 1) (m := 2)
       (monoDecGood3_mem (R := R) (D := D) M hI hG))
 
