@@ -1340,6 +1340,378 @@ theorem supremum_of_open_interval {R : Type u} (D : DenseLinearOrderNoEndpoints 
           rw [h_eq] at hy_lt_z
           exact False.elim (D.irrefl y hy_lt_z)
 
+/-
+=========================================================
+Main Theorem: Definable Completeness
+=========================================================
+-/
+
+lemma bounded_subset {R : Type u} (D : DenseLinearOrderNoEndpoints R) 
+    {A B : Set (Power R 1)} (hSubset : forall x, A x -> B x) (hBound : BoundedAbove1 D B) : 
+    BoundedAbove1 D A := by
+  rcases hBound with ⟨b, hb⟩
+  exact ⟨b, fun x hx => hb x (hSubset x hx)⟩
+
+lemma definable_completeness_core {R : Type u} (D : DenseLinearOrderNoEndpoints R)
+    (A : Set (Power R 1))
+    (hDef : FiniteUnionOfPointsAndIntervals D A) :
+    BoundedAbove1 D A -> 
+    (∀ x, ¬ A x) ∨ (∃ s : R, IsSupremum1 D A s) := by
+  
+  intro hBounded
+  induction hDef with
+  
+  | empty =>
+      left
+      intro x hx
+      exact hx
+  | point a =>
+      right
+      use a
+      constructor
+      · 
+        intro x hx
+        
+        right
+        exact hx
+      · 
+        intro b hb
+        let x_a : Power R 1 := fun _ => a
+        have hx_in_set : pointSet a x_a := by rfl
+        exact hb x_a hx_in_set
+      
+  | interval a b =>
+      cases b with
+      | negInf =>
+          left
+          intro x hx
+          exact hx.right
+
+      | finite val =>
+          by_cases hEmpty : NonEmpty1 (openInterval D a (Endpoint.finite val))
+          ·
+            right
+            use val
+            exact supremum_of_open_interval D a val hEmpty
+          ·
+            left
+            intro x hx
+            exact hEmpty ⟨x, hx⟩
+
+      | posInf =>
+          by_cases hEmpty : NonEmpty1 (openInterval D a Endpoint.posInf)
+          · rcases hEmpty with ⟨x0, hx0_left, _⟩
+            rcases hBounded with ⟨M, hM_upper⟩
+            
+            let m := max1 D M (Power.coord1 x0)
+            rcases D.no_right_endpoint m with ⟨y, hmy⟩
+            
+            have hM_lt_y : D.lt M y := by
+              dsimp [m, max1] at hmy
+              split_ifs at hmy with h
+              · exact D.trans h hmy
+              · exact hmy
+              
+            have hy_gt_a : Endpoint.lt D a (Endpoint.finite y) := by
+              dsimp [m, max1] at hmy
+              split_ifs at hmy with h
+              · cases a with
+                | negInf => exact trivial
+                | finite a_val => exact D.trans hx0_left hmy
+                | posInf => contradiction
+              · have hx0_le_M : D.lt (Power.coord1 x0) M \/ Power.coord1 x0 = M := by
+                  rcases D.trichotomy (Power.coord1 x0) M with ⟨h1, _, _⟩ | ⟨h2, _, _⟩ | ⟨h3, _, _⟩
+                  · left; exact h1
+                  · right; exact h2
+                  · contradiction
+                have hx0_lt_y : D.lt (Power.coord1 x0) y := by
+                  cases hx0_le_M with
+                  | inl hlt => exact D.trans hlt hM_lt_y
+                  | inr heq => rw [heq]; exact hM_lt_y
+                cases a with
+                | negInf => exact trivial
+                | finite a_val => exact D.trans hx0_left hx0_lt_y
+                | posInf => contradiction
+
+            let y_pow : Power R 1 := fun _ => y
+            have hy_in : openInterval D a Endpoint.posInf y_pow := ⟨hy_gt_a, trivial⟩
+            
+            have hy_le_M := hM_upper y_pow hy_in
+            
+            cases hy_le_M with
+            | inl hlt => 
+                change D.lt y M at hlt
+                exact False.elim (D.irrefl M (D.trans hM_lt_y hlt))
+            | inr heq => 
+                
+                change y = M at heq
+                rw [heq] at hM_lt_y
+                exact False.elim (D.irrefl M hM_lt_y)
+          ·
+            left
+            intro x hx
+            exact hEmpty ⟨x, hx⟩
+  | union hA hB ihA ihB =>
+      have hBoundA := bounded_subset D (fun x hx => Or.inl hx) hBounded
+      have hBoundB := bounded_subset D (fun x hx => Or.inr hx) hBounded
+      
+      have hResA := ihA hBoundA
+      have hResB := ihB hBoundB
+      
+      cases hResA with
+      | inl hEmptyA =>
+          cases hResB with
+          | inl hEmptyB =>
+              left
+              intro x hx
+              cases hx with
+              | inl hxA => exact hEmptyA x hxA
+              | inr hxB => exact hEmptyB x hxB
+          | inr hSupB =>
+              right
+              rcases hSupB with ⟨sB, hsB_upper, hsB_least⟩
+              use sB
+              constructor
+              · intro x hx
+                cases hx with
+                | inl hxA => exact False.elim (hEmptyA x hxA)
+                | inr hxB => exact hsB_upper x hxB
+              · intro b hb
+                have hbB : IsUpperBound1 D _ b := fun x hx => hb x (Or.inr hx)
+                exact hsB_least b hbB
+      | inr hSupA =>
+          cases hResB with
+          | inl hEmptyB =>
+              right
+              rcases hSupA with ⟨sA, hsA_upper, hsA_least⟩
+              use sA
+              constructor
+              · intro x hx
+                cases hx with
+                | inl hxA => exact hsA_upper x hxA
+                | inr hxB => exact False.elim (hEmptyB x hxB)
+              · intro b hb
+                have hbA : IsUpperBound1 D _ b := fun x hx => hb x (Or.inl hx)
+                exact hsA_least b hbA
+          | inr hSupB =>
+              right
+              rcases hSupA with ⟨sA, hsA⟩
+              rcases hSupB with ⟨sB, hsB⟩
+              
+              use max1 D sA sB
+              
+              exact supremum_of_union D _ _ sA sB hsA hsB
+
+theorem definable_completeness {R : Type u} (D : DenseLinearOrderNoEndpoints R)
+    (A : Set (Power R 1))
+    (hDef : FiniteUnionOfPointsAndIntervals D A)
+    (hNotEmpty : NonEmpty1 A)
+    (hBounded : BoundedAbove1 D A) :
+    ∃ s : R, IsSupremum1 D A s := by
+
+  have hCore := definable_completeness_core D A hDef hBounded
+  cases hCore with
+  | inl hEmpty => 
+      rcases hNotEmpty with ⟨x, hx⟩
+      exact False.elim (hEmpty x hx)
+  | inr hSup => 
+      exact hSup
+
+
+
+
+
+
+
+/-
+=========================================================
+Cardinality Definitions
+=========================================================
+-/
+
+def IsFinite1 {R : Type u} (A : Set (Power R 1)) : Prop :=
+  exists L : List R, forall x : Power R 1, A x <-> Power.coord1 x ∈ L
+
+def IsInfinite1 {R : Type u} (A : Set (Power R 1)) : Prop :=
+  Not (IsFinite1 A)
+
+/-
+=========================================================
+Theorem 4: Intervals in Dense Orders are Infinite
+=========================================================
+-/
+theorem interval_is_infinite {R : Type u} (D : DenseLinearOrderNoEndpoints R) 
+    (a b : R) (hab : D.lt a b) :
+    IsInfinite1 (openInterval D (Endpoint.finite a) (Endpoint.finite b)) := by
+  
+  intro hFinite
+  rcases hFinite with ⟨L, hL⟩
+  
+  rcases D.dense hab with ⟨x_val, hax, hxb⟩
+  let x_pow : Power R 1 := fun _ => x_val
+  have hx_in : openInterval D (Endpoint.finite a) (Endpoint.finite b) x_pow := ⟨hax, hxb⟩
+
+  by_cases hL_empty : L = []
+  ·
+    subst hL_empty
+    have hx_notin_L := (hL x_pow).mp hx_in
+    cases hx_notin_L
+  · 
+    rcases extrema_of_finite_sets D L hL_empty with ⟨m, M, hMin, hMax⟩
+    rcases hMax with ⟨hM_in_L_val, hM_upper⟩
+    
+    let M_pow : Power R 1 := fun _ => M
+    have hM_in_L_pow : Power.coord1 M_pow ∈ L := hM_in_L_val
+    have hM_in_int := (hL M_pow).mpr hM_in_L_pow
+
+    have hMb : D.lt M b := hM_in_int.right
+    
+    rcases D.dense hMb with ⟨z, hMz, hzb⟩
+    let z_pow : Power R 1 := fun _ => z
+
+    have haz : D.lt a z := D.trans (hM_in_int.left) hMz
+    have hz_in_int : openInterval D (Endpoint.finite a) (Endpoint.finite b) z_pow := ⟨haz, hzb⟩
+
+    have hz_in_L := (hL z_pow).mp hz_in_int
+    have hz_in_ListSet : ListSet L z_pow := hz_in_L
+    
+    have hz_le_M := hM_upper z_pow hz_in_ListSet
+
+    cases hz_le_M with
+    | inl hlt => 
+        change D.lt z M at hlt
+        exact False.elim (D.irrefl M (D.trans hMz hlt))
+    | inr heq => 
+        change z = M at heq
+        rw [heq] at hMz
+        exact False.elim (D.irrefl M hMz)
+
+/-
+=========================================================
+Theorem 5: Infinite Sets Contain an Interval
+=========================================================
+-/
+theorem infinite_contains_interval {R : Type u} (D : DenseLinearOrderNoEndpoints R)
+    (A : Set (Power R 1))
+    (hDef : FiniteUnionOfPointsAndIntervals D A)
+    (hInf : IsInfinite1 A) :
+    exists a b : Endpoint R, 
+      Endpoint.lt D a b /\ 
+      forall x, openInterval D a b x -> A x := by
+  
+  induction hDef with
+  | empty => 
+      have hFin : IsFinite1 (setEmpty : Set (Power R 1)) := by
+        use []
+        intro x
+        constructor
+        · intro hx; exact False.elim hx
+        · intro hx; cases hx
+      exact False.elim (hInf hFin)
+
+  | point p => 
+      have hFin : IsFinite1 (pointSet p) := by
+        use [p]
+        intro x
+        constructor
+        · intro hx
+          change Power.coord1 x = p at hx
+          rw [hx]
+          exact List.Mem.head _
+        · intro hx
+          cases hx with
+          | head => rfl
+          | tail _ h_false => cases h_false
+      exact False.elim (hInf hFin)
+
+  | interval a b => 
+      -- Exhaustively check endpoints to guarantee safety
+      cases a with
+      | posInf =>
+          have hFin : IsFinite1 (openInterval D Endpoint.posInf b) := by
+            use []
+            intro x
+            constructor
+            · intro hx; exact False.elim hx.left
+            · intro hx; cases hx
+          exact False.elim (hInf hFin)
+      | negInf =>
+          cases b with
+          | negInf =>
+              have hFin : IsFinite1 (openInterval D Endpoint.negInf Endpoint.negInf) := by
+                use []
+                intro x
+                constructor
+                · intro hx; exact False.elim hx.right
+                · intro hx; cases hx
+              exact False.elim (hInf hFin)
+          | finite val_b =>
+              use Endpoint.negInf, Endpoint.finite val_b
+              exact ⟨trivial, fun x hx => hx⟩
+          | posInf =>
+              use Endpoint.negInf, Endpoint.posInf
+              exact ⟨trivial, fun x hx => hx⟩
+      | finite val_a =>
+          cases b with
+          | negInf =>
+              have hFin : IsFinite1 (openInterval D (Endpoint.finite val_a) Endpoint.negInf) := by
+                use []
+                intro x
+                constructor
+                · intro hx; exact False.elim hx.right
+                · intro hx; cases hx
+              exact False.elim (hInf hFin)
+          | posInf =>
+              use Endpoint.finite val_a, Endpoint.posInf
+              exact ⟨trivial, fun x hx => hx⟩
+          | finite val_b =>
+              by_cases hab : D.lt val_a val_b
+              · use Endpoint.finite val_a, Endpoint.finite val_b
+                exact ⟨hab, fun x hx => hx⟩
+              ·
+                have hFin : IsFinite1 (openInterval D (Endpoint.finite val_a) (Endpoint.finite val_b)) := by
+                  use []
+                  intro x
+                  constructor
+                  · intro hx
+                    have htrans := D.trans hx.left hx.right
+                    exact False.elim (hab htrans)
+                  · intro hx; cases hx
+                exact False.elim (hInf hFin)
+
+  | union hA hB ihA ihB =>
+      rename_i S1 S2
+      
+      by_cases hA_inf : IsInfinite1 S1
+      · rcases ihA hA_inf with ⟨a, b, hab, hSub⟩
+        use a, b
+        exact ⟨hab, fun x hx => Or.inl (hSub x hx)⟩
+      · by_cases hB_inf : IsInfinite1 S2
+        · rcases ihB hB_inf with ⟨a, b, hab, hSub⟩
+          use a, b
+          exact ⟨hab, fun x hx => Or.inr (hSub x hx)⟩
+        ·
+          have hA_fin : IsFinite1 S1 := Classical.not_not.mp hA_inf
+          have hB_fin : IsFinite1 S2 := Classical.not_not.mp hB_inf
+          
+          rcases hA_fin with ⟨LA, hLA⟩
+          rcases hB_fin with ⟨LB, hLB⟩
+          
+          have hUnion_fin : IsFinite1 (setUnion S1 S2) := by
+            use LA ++ LB
+            intro x
+            constructor
+            · intro hx
+              cases hx with
+              | inl hAx => exact List.mem_append.mpr (Or.inl ((hLA x).mp hAx))
+              | inr hBx => exact List.mem_append.mpr (Or.inr ((hLB x).mp hBx))
+            · intro hx
+              cases List.mem_append.mp hx with
+              | inl hLAx => exact Or.inl ((hLA x).mpr hLAx)
+              | inr hLBx => exact Or.inr ((hLB x).mpr hLBx)
+              
+          exact False.elim (hInf hUnion_fin)
+
 end OMinimalStructure
 
 end OMinimal
