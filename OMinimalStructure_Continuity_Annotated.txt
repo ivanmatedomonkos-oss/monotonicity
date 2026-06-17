@@ -1,0 +1,4577 @@
+# Line-by-line annotation of `OMinimalStructure_Continuity_Fixed.lean`
+
+This is a companion explanation, not a replacement Lean file. Each non-empty original line is shown with its original line number, followed by an explanation of the Lean syntax and the mathematical role of that line.
+
+## Conventions used throughout
+
+* `Set A` in Mathlib is essentially `A -> Prop`: a set is represented by its membership predicate.
+* `Prop` is the universe of propositions. A term of a proposition is a proof of it. This is the Curry-Howard viewpoint.
+* `Type u` means a type living in universe level `u`. The line `universe u` declares this universe variable.
+* Parentheses `(x : T)` usually introduce explicit arguments. Braces `{x : T}` introduce implicit arguments; Lean tries to infer them.
+* `:=` separates the name/type of a declaration from its definition or proof.
+* `:= by` starts tactic mode: after it, lines such as `simp`, `exact`, `rw`, `have`, and `rcases` build the required proof term.
+* `fun x => ...` is lambda notation: it defines a function sending `x` to the expression after `=>`.
+* `forall x : A, P x` is universal quantification. `exists x : A, P x` is existential quantification.
+* `A /\ B` is conjunction, `A \/ B` is disjunction, `Not A` is negation, and `P -> Q` is implication.
+* `{x : A // P x}` is a subtype: an element is a pair consisting of `x : A` and a proof of `P x`.
+* `Fin n` is the type of natural numbers strictly less than `n`; it is used for coordinates of `R^n`.
+
+---
+
+## Lines 1ff. Imports, options, universe, and top namespace
+
+### Line 1
+
+```lean
+import Mathlib.Data.Set.Basic
+```
+
+Imports Mathlib material about sets. In Lean, `Set A` is represented as a predicate `A -> Prop`.
+
+### Line 2
+
+```lean
+import Mathlib.Data.Fin.Tuple.Basic
+```
+
+Imports tuple tools for `Fin`-indexed functions, especially `Fin.append` and simplification lemmas for finite tuples.
+
+### Line 3
+
+```lean
+import Mathlib.Tactic
+```
+
+Imports common tactics such as `simp`, `omega`, `rw`, and other proof automation used later.
+
+### Line 5
+
+```lean
+set_option linter.unusedSimpArgs false
+```
+
+Changes a Lean option. Here it disables the linter warning about unused arguments supplied to `simp`.
+
+### Line 7
+
+```lean
+universe u
+```
+
+Declares a universe variable. This lets the ordered type `R` live in an arbitrary universe `Type u` rather than only in `Type`.
+
+### Line 9
+
+```lean
+namespace OMinimal
+```
+
+Opens a namespace. Declarations after this are named with this namespace prefix, preventing name clashes.
+
+## Lines 11ff. Basic set operations, written explicitly as predicates
+
+### Line 11
+
+```lean
+def setEmpty {A : Type u} : Set A :=
+```
+
+Starts the definition `setEmpty`; it defines the empty set as the predicate that is always false. The declaration may span several following indented lines.
+
+### Line 12
+
+```lean
+  fun _ => False
+```
+
+This is a lambda expression. It defines a function by saying what output to return for each input.
+
+### Line 14
+
+```lean
+def setUnion {A : Type u} (X Y : Set A) : Set A :=
+```
+
+Starts the definition `setUnion`; it defines union by pointwise disjunction. The declaration may span several following indented lines.
+
+### Line 15
+
+```lean
+  fun a => X a \/ Y a
+```
+
+This is a lambda expression. It defines a function by saying what output to return for each input.
+
+### Line 17
+
+```lean
+def setInter {A : Type u} (X Y : Set A) : Set A :=
+```
+
+Starts the definition `setInter`; it defines intersection by pointwise conjunction. The declaration may span several following indented lines.
+
+### Line 18
+
+```lean
+  fun a => X a /\ Y a
+```
+
+This is a lambda expression. It defines a function by saying what output to return for each input.
+
+### Line 20
+
+```lean
+def setCompl {A : Type u} (X : Set A) : Set A :=
+```
+
+Starts the definition `setCompl`; it defines complement by pointwise negation. The declaration may span several following indented lines.
+
+### Line 21
+
+```lean
+  fun a => Not (X a)
+```
+
+This is a lambda expression. It defines a function by saying what output to return for each input.
+
+## Lines 23ff. Finite powers `R^n` represented as functions `Fin n -> R`
+
+### Line 23
+
+```lean
+abbrev Power (R : Type u) (n : Nat) := Fin n -> R
+```
+
+Starts an abbreviation named `Power`. Unlike an opaque theorem, this is meant to unfold transparently during elaboration and simplification; here it names a commonly used type expression.
+
+### Line 25
+
+```lean
+namespace Power
+```
+
+Opens a namespace. Declarations after this are named with this namespace prefix, preventing name clashes.
+
+### Line 27
+
+```lean
+variable {R : Type u}
+```
+
+Declares variables that Lean should treat as available implicit parameters inside the current namespace/section.
+
+### Line 29
+
+```lean
+def left {n m : Nat} (z : Power R (n + m)) : Power R n :=
+```
+
+Starts the definition `left`; it takes the first block of coordinates from a tuple of length `n + m`. The declaration may span several following indented lines.
+
+### Line 30
+
+```lean
+  fun i => z (Fin.castAdd m i)
+```
+
+This is a lambda expression. It defines a function by saying what output to return for each input.
+
+### Line 32
+
+```lean
+def right {n m : Nat} (z : Power R (n + m)) : Power R m :=
+```
+
+Starts the definition `right`; it takes the last block of coordinates from a tuple of length `n + m`. The declaration may span several following indented lines.
+
+### Line 33
+
+```lean
+  fun j => z (Fin.natAdd n j)
+```
+
+This is a lambda expression. It defines a function by saying what output to return for each input.
+
+### Line 35
+
+```lean
+def deleteCoord {n : Nat} (k : Fin (n + 1)) (z : Power R (n + 1)) : Power R n :=
+```
+
+Starts the definition `deleteCoord`; it deletes one coordinate from a tuple of length `n + 1`. The declaration may span several following indented lines.
+
+### Line 36
+
+```lean
+  fun i => z (Fin.succAbove k i)
+```
+
+This is a lambda expression. It defines a function by saying what output to return for each input.
+
+### Line 38
+
+```lean
+def coord1 (x : Power R 1) : R :=
+```
+
+Starts the definition `coord1`; it extracts the only coordinate of a one-dimensional tuple. The declaration may span several following indented lines.
+
+### Line 39
+
+```lean
+  x 0
+```
+
+This is a continuation line of the surrounding declaration or proof. Its indentation tells Lean it belongs to the previous syntactic construct.
+
+### Line 41
+
+```lean
+def coord2_0 (x : Power R 2) : R :=
+```
+
+Starts the definition `coord2_0`; it extracts the first coordinate of a two-dimensional tuple. The declaration may span several following indented lines.
+
+### Line 42
+
+```lean
+  x 0
+```
+
+This is a continuation line of the surrounding declaration or proof. Its indentation tells Lean it belongs to the previous syntactic construct.
+
+### Line 44
+
+```lean
+def coord2_1 (x : Power R 2) : R :=
+```
+
+Starts the definition `coord2_1`; it extracts the second coordinate of a two-dimensional tuple. The declaration may span several following indented lines.
+
+### Line 45
+
+```lean
+  x 1
+```
+
+This is a continuation line of the surrounding declaration or proof. Its indentation tells Lean it belongs to the previous syntactic construct.
+
+### Line 47
+
+```lean
+def append {n m : Nat} (x : Power R n) (y : Power R m) : Power R (n + m) :=
+```
+
+Starts the definition `append`; it concatenates an `n`-tuple and an `m`-tuple into an `(n + m)`-tuple. The declaration may span several following indented lines.
+
+### Line 48
+
+```lean
+  Fin.append x y
+```
+
+This line uses `Fin` constructors or coercions to move indices between finite coordinate types.
+
+### Line 50
+
+```lean
+@[simp] theorem left_append {n m : Nat} (x : Power R n) (y : Power R m) :
+```
+
+The attribute `@[simp]` registers this theorem for the simplifier. The theorem `left_append` proves that taking the left part after appending returns the original left tuple.
+
+### Line 51
+
+```lean
+    left (append x y) = x := by
+```
+
+The declaration or local proof switches into tactic mode with `by`; the following indented tactic commands construct the required term.
+
+### Line 52
+
+```lean
+  funext i
+```
+
+`funext` applies function extensionality: to prove two functions equal, it suffices to prove equal outputs for an arbitrary input.
+
+### Line 53
+
+```lean
+  simp [left, append]
+```
+
+`simp` uses definitional unfolding and registered simplification lemmas to simplify the goal or hypothesis.
+
+### Line 55
+
+```lean
+@[simp] theorem right_append {n m : Nat} (x : Power R n) (y : Power R m) :
+```
+
+The attribute `@[simp]` registers this theorem for the simplifier. The theorem `right_append` proves that taking the right part after appending returns the original right tuple.
+
+### Line 56
+
+```lean
+    right (append x y) = y := by
+```
+
+The declaration or local proof switches into tactic mode with `by`; the following indented tactic commands construct the required term.
+
+### Line 57
+
+```lean
+  funext i
+```
+
+`funext` applies function extensionality: to prove two functions equal, it suffices to prove equal outputs for an arbitrary input.
+
+### Line 58
+
+```lean
+  simp [right, append]
+```
+
+`simp` uses definitional unfolding and registered simplification lemmas to simplify the goal or hypothesis.
+
+### Line 60
+
+```lean
+end Power
+```
+
+Closes the named namespace or section, returning to the outer naming scope.
+
+## Lines 62ff. Dense linear orders without endpoints
+
+### Line 62
+
+```lean
+structure DenseLinearOrderNoEndpoints (R : Type u) where
+```
+
+Starts structure `DenseLinearOrderNoEndpoints`; it packages a relation `lt` together with axioms saying it is a dense linear order with no endpoints. In type theory, an element of this structure is a tuple of data and proofs for all listed fields.
+
+### Line 63
+
+```lean
+  lt : R -> R -> Prop
+```
+
+This field names the strict order relation. It is a function taking two elements of `R` and returning a proposition.
+
+### Line 64
+
+```lean
+  irrefl : forall x : R, Not (lt x x)
+```
+
+This field is irreflexivity: no element is strictly less than itself.
+
+### Line 65
+
+```lean
+  trans : forall {x y z : R}, lt x y -> lt y z -> lt x z
+```
+
+This field is transitivity of the strict order.
+
+### Line 66
+
+```lean
+  trichotomy : forall x y : R,
+```
+
+This field states linearity/trichotomy: for two elements, exactly one of `<`, `=`, or `>` holds, encoded with conjunctions and disjunctions.
+
+### Line 67
+
+```lean
+      (lt x y /\ Not (lt y x) /\ Not (x = y)) \/
+```
+
+This line combines propositions using conjunction `/\` or disjunction `\/`.
+
+### Line 68
+
+```lean
+      (x = y /\ Not (lt x y) /\ Not (lt y x)) \/
+```
+
+This line combines propositions using conjunction `/\` or disjunction `\/`.
+
+### Line 69
+
+```lean
+      (lt y x /\ Not (lt x y) /\ Not (x = y))
+```
+
+This line combines propositions using conjunction `/\` or disjunction `\/`.
+
+### Line 70
+
+```lean
+  dense : forall {x y : R}, lt x y -> exists z : R, lt x z /\ lt z y
+```
+
+This field states density: between two strictly ordered points there exists a third point.
+
+### Line 71
+
+```lean
+  no_left_endpoint : forall x : R, exists y : R, lt y x
+```
+
+This field states there is always a smaller element.
+
+### Line 72
+
+```lean
+  no_right_endpoint : forall x : R, exists y : R, lt x y
+```
+
+This field states there is always a larger element.
+
+## Lines 74ff. Extended endpoints for intervals: -infinity, finite points, +infinity
+
+### Line 74
+
+```lean
+inductive Endpoint (R : Type u) where
+```
+
+Starts inductive type `Endpoint`; it creates a new type with three constructors: negative infinity, finite endpoints, and positive infinity. Each constructor below gives one way to build an element.
+
+### Line 75
+
+```lean
+  | negInf : Endpoint R
+```
+
+This is a pattern-matching equation for the preceding definition. The patterns before `=>` determine which branch applies.
+
+### Line 76
+
+```lean
+  | finite : R -> Endpoint R
+```
+
+This is a pattern-matching equation for the preceding definition. The patterns before `=>` determine which branch applies.
+
+### Line 77
+
+```lean
+  | posInf : Endpoint R
+```
+
+This is a pattern-matching equation for the preceding definition. The patterns before `=>` determine which branch applies.
+
+### Line 79
+
+```lean
+namespace Endpoint
+```
+
+Opens a namespace. Declarations after this are named with this namespace prefix, preventing name clashes.
+
+### Line 81
+
+```lean
+variable {R : Type u}
+```
+
+Declares variables that Lean should treat as available implicit parameters inside the current namespace/section.
+
+### Line 83
+
+```lean
+def lt (D : DenseLinearOrderNoEndpoints R) : Endpoint R -> Endpoint R -> Prop
+```
+
+Starts the definition `lt`; it defines the ordering relation on extended endpoints by pattern matching. The declaration may span several following indented lines.
+
+### Line 84
+
+```lean
+  | Endpoint.negInf, Endpoint.negInf => False
+```
+
+This is a pattern-matching equation for the preceding definition. The patterns before `=>` determine which branch applies.
+
+### Line 85
+
+```lean
+  | Endpoint.negInf, Endpoint.finite _ => True
+```
+
+This is a pattern-matching equation for the preceding definition. The patterns before `=>` determine which branch applies.
+
+### Line 86
+
+```lean
+  | Endpoint.negInf, Endpoint.posInf => True
+```
+
+This is a pattern-matching equation for the preceding definition. The patterns before `=>` determine which branch applies.
+
+### Line 87
+
+```lean
+  | Endpoint.finite _, Endpoint.negInf => False
+```
+
+This is a pattern-matching equation for the preceding definition. The patterns before `=>` determine which branch applies.
+
+### Line 88
+
+```lean
+  | Endpoint.finite a, Endpoint.finite b => D.lt a b
+```
+
+This is a pattern-matching equation for the preceding definition. The patterns before `=>` determine which branch applies.
+
+### Line 89
+
+```lean
+  | Endpoint.finite _, Endpoint.posInf => True
+```
+
+This is a pattern-matching equation for the preceding definition. The patterns before `=>` determine which branch applies.
+
+### Line 90
+
+```lean
+  | Endpoint.posInf, _ => False
+```
+
+This is a pattern-matching equation for the preceding definition. The patterns before `=>` determine which branch applies.
+
+### Line 92
+
+```lean
+end Endpoint
+```
+
+Closes the named namespace or section, returning to the outer naming scope.
+
+## Lines 94ff. Points, intervals, and the one-dimensional o-minimality condition
+
+### Line 94
+
+```lean
+def pointSet {R : Type u} (a : R) : Set (Power R 1) :=
+```
+
+Starts the definition `pointSet`; it defines the singleton subset `{a}` of `R`, represented inside `Power R 1`. The declaration may span several following indented lines.
+
+### Line 95
+
+```lean
+  fun x => Power.coord1 x = a
+```
+
+This is a lambda expression. It defines a function by saying what output to return for each input.
+
+### Line 97
+
+```lean
+def openInterval {R : Type u} (D : DenseLinearOrderNoEndpoints R)
+```
+
+Starts the definition `openInterval`; it defines an open interval, allowing infinite endpoints. The declaration may span several following indented lines.
+
+### Line 98
+
+```lean
+    (a b : Endpoint R) : Set (Power R 1) :=
+```
+
+The symbol `:=` says that the following expression is the value of the definition or proof being declared.
+
+### Line 99
+
+```lean
+  fun x => Endpoint.lt D a (Endpoint.finite (Power.coord1 x)) /\
+```
+
+This is a lambda expression. It defines a function by saying what output to return for each input.
+
+### Line 100
+
+```lean
+           Endpoint.lt D (Endpoint.finite (Power.coord1 x)) b
+```
+
+This line refers to constructors or functions in the `Endpoint` namespace.
+
+### Line 102
+
+```lean
+inductive FiniteUnionOfPointsAndIntervals {R : Type u}
+```
+
+Starts inductive type `FiniteUnionOfPointsAndIntervals`; it inductively describes finite unions generated by empty sets, points, intervals, and union. Each constructor below gives one way to build an element.
+
+### Line 103
+
+```lean
+    (D : DenseLinearOrderNoEndpoints R) : Set (Power R 1) -> Prop where
+```
+
+This line contains function or implication arrows. In propositions, `P -> Q` means implication; in types, `A -> B` means a function type.
+
+### Line 104
+
+```lean
+  | empty :
+```
+
+This is a pattern-matching equation for the preceding definition. The patterns before `=>` determine which branch applies.
+
+### Line 105
+
+```lean
+      FiniteUnionOfPointsAndIntervals D (setEmpty : Set (Power R 1))
+```
+
+This is a continuation line of the surrounding declaration or proof. Its indentation tells Lean it belongs to the previous syntactic construct.
+
+### Line 106
+
+```lean
+  | point (a : R) :
+```
+
+This is a pattern-matching equation for the preceding definition. The patterns before `=>` determine which branch applies.
+
+### Line 107
+
+```lean
+      FiniteUnionOfPointsAndIntervals D (pointSet a)
+```
+
+This is a continuation line of the surrounding declaration or proof. Its indentation tells Lean it belongs to the previous syntactic construct.
+
+### Line 108
+
+```lean
+  | interval (a b : Endpoint R) :
+```
+
+This is a pattern-matching equation for the preceding definition. The patterns before `=>` determine which branch applies.
+
+### Line 109
+
+```lean
+      FiniteUnionOfPointsAndIntervals D (openInterval D a b)
+```
+
+This is a continuation line of the surrounding declaration or proof. Its indentation tells Lean it belongs to the previous syntactic construct.
+
+### Line 110
+
+```lean
+  | union {A B : Set (Power R 1)} :
+```
+
+This is a pattern-matching equation for the preceding definition. The patterns before `=>` determine which branch applies.
+
+### Line 111
+
+```lean
+      FiniteUnionOfPointsAndIntervals D A ->
+```
+
+This line contains function or implication arrows. In propositions, `P -> Q` means implication; in types, `A -> B` means a function type.
+
+### Line 112
+
+```lean
+      FiniteUnionOfPointsAndIntervals D B ->
+```
+
+This line contains function or implication arrows. In propositions, `P -> Q` means implication; in types, `A -> B` means a function type.
+
+### Line 113
+
+```lean
+      FiniteUnionOfPointsAndIntervals D (setUnion A B)
+```
+
+This is a continuation line of the surrounding declaration or proof. Its indentation tells Lean it belongs to the previous syntactic construct.
+
+## Lines 115ff. The structure of an o-minimal structure
+
+### Line 115
+
+```lean
+structure OMinimalStructure {R : Type u} (D : DenseLinearOrderNoEndpoints R) where
+```
+
+Starts structure `OMinimalStructure`; it packages the arity-indexed definable sets and the closure/o-minimality axioms. In type theory, an element of this structure is a tuple of data and proofs for all listed fields.
+
+### Line 116
+
+```lean
+  S : (n : Nat) -> Set (Set (Power R n))
+```
+
+This field says that for each arity `n`, `S n` is a set of subsets of `Power R n`, i.e. the definable subsets of `R^n`.
+
+### Line 118
+
+```lean
+  empty_mem : forall n : Nat, S n (setEmpty : Set (Power R n))
+```
+
+This structure field is the axiom that the empty set is definable in every arity.
+
+### Line 119
+
+```lean
+  union_mem : forall {n : Nat} {A B : Set (Power R n)},
+```
+
+This structure field is closure of definable sets under finite union.
+
+### Line 120
+
+```lean
+    S n A -> S n B -> S n (setUnion A B)
+```
+
+This line contains function or implication arrows. In propositions, `P -> Q` means implication; in types, `A -> B` means a function type.
+
+### Line 121
+
+```lean
+  inter_mem : forall {n : Nat} {A B : Set (Power R n)},
+```
+
+This structure field is closure of definable sets under finite intersection.
+
+### Line 122
+
+```lean
+    S n A -> S n B -> S n (setInter A B)
+```
+
+This line contains function or implication arrows. In propositions, `P -> Q` means implication; in types, `A -> B` means a function type.
+
+### Line 123
+
+```lean
+  compl_mem : forall {n : Nat} {A : Set (Power R n)},
+```
+
+This structure field is closure of definable sets under complement.
+
+### Line 124
+
+```lean
+    S n A -> S n (setCompl A)
+```
+
+This line contains function or implication arrows. In propositions, `P -> Q` means implication; in types, `A -> B` means a function type.
+
+### Line 126
+
+```lean
+  diagonal_mem : forall {n : Nat} (i j : Fin n),
+```
+
+This structure field says coordinate-equality diagonals are definable.
+
+### Line 127
+
+```lean
+    i < j -> S n (fun x : Power R n => x i = x j)
+```
+
+This line contains function or implication arrows. In propositions, `P -> Q` means implication; in types, `A -> B` means a function type.
+
+### Line 129
+
+```lean
+  product_mem : forall {n m : Nat} {A : Set (Power R n)} {B : Set (Power R m)},
+```
+
+This structure field says products of definable sets are definable.
+
+### Line 130
+
+```lean
+    S n A -> S m B ->
+```
+
+This line contains function or implication arrows. In propositions, `P -> Q` means implication; in types, `A -> B` means a function type.
+
+### Line 131
+
+```lean
+      S (n + m) (fun z : Power R (n + m) =>
+```
+
+This is a continuation line of the surrounding declaration or proof. Its indentation tells Lean it belongs to the previous syntactic construct.
+
+### Line 132
+
+```lean
+        A (Power.left z) /\ B (Power.right z))
+```
+
+This line combines propositions using conjunction `/\` or disjunction `\/`.
+
+### Line 134
+
+```lean
+  project_mem : forall {n : Nat} (k : Fin (n + 1)) {A : Set (Power R (n + 1))},
+```
+
+This structure field says projection away one coordinate preserves definability.
+
+### Line 135
+
+```lean
+    S (n + 1) A ->
+```
+
+This line contains function or implication arrows. In propositions, `P -> Q` means implication; in types, `A -> B` means a function type.
+
+### Line 136
+
+```lean
+      S n (fun y : Power R n =>
+```
+
+This is a continuation line of the surrounding declaration or proof. Its indentation tells Lean it belongs to the previous syntactic construct.
+
+### Line 137
+
+```lean
+        exists x : Power R (n + 1), A x /\ Power.deleteCoord k x = y)
+```
+
+This line continues an existential statement; the expression requires a witness of the indicated type.
+
+### Line 139
+
+```lean
+  reindex_mem : forall {n m : Nat} (sigma : Fin n -> Fin m) {A : Set (Power R n)},
+```
+
+This added closure principle says definability is preserved by pulling back along a coordinate map.
+
+### Line 140
+
+```lean
+    S n A -> S m (fun x : Power R m => A (fun i : Fin n => x (sigma i)))
+```
+
+This line contains function or implication arrows. In propositions, `P -> Q` means implication; in types, `A -> B` means a function type.
+
+### Line 142
+
+```lean
+  existsLast_mem : forall {n m : Nat} {A : Set (Power R (n + m))},
+```
+
+This added closure principle says existential quantification over a final block of coordinates preserves definability.
+
+### Line 143
+
+```lean
+    S (n + m) A ->
+```
+
+This line contains function or implication arrows. In propositions, `P -> Q` means implication; in types, `A -> B` means a function type.
+
+### Line 144
+
+```lean
+      S n (fun x : Power R n => exists y : Power R m, A (Power.append x y))
+```
+
+This line uses existential quantification, corresponding mathematically to projection in the definability proof.
+
+### Line 146
+
+```lean
+  lt_mem :
+```
+
+This structure field says the strict order relation itself is definable as a subset of `R^2`.
+
+### Line 147
+
+```lean
+    S 2 (fun p : Power R 2 => D.lt (Power.coord2_0 p) (Power.coord2_1 p))
+```
+
+This line applies the strict order relation stored in the dense linear order structure `D`.
+
+### Line 149
+
+```lean
+  ominimal : forall A : Set (Power R 1),
+```
+
+This structure field is the o-minimality axiom in arity one: definable subsets of `R` are finite unions of points and intervals.
+
+### Line 150
+
+```lean
+    S 1 A <-> FiniteUnionOfPointsAndIntervals D A
+```
+
+This line contains function or implication arrows. In propositions, `P -> Q` means implication; in types, `A -> B` means a function type.
+
+## Lines 152ff. Definitions and lemmas inside the `OMinimalStructure` namespace
+
+### Line 152
+
+```lean
+namespace OMinimalStructure
+```
+
+Opens a namespace. Declarations after this are named with this namespace prefix, preventing name clashes.
+
+### Line 154
+
+```lean
+variable {R : Type u} {D : DenseLinearOrderNoEndpoints R}
+```
+
+Declares variables that Lean should treat as available implicit parameters inside the current namespace/section.
+
+### Line 156
+
+```lean
+def Definable (M : OMinimalStructure D) {n : Nat} (A : Set (Power R n)) : Prop :=
+```
+
+Starts the definition `Definable`; it abbreviates membership in `M.S n`, i.e. definability in arity `n`. The declaration may span several following indented lines.
+
+### Line 157
+
+```lean
+  M.S n A
+```
+
+This line states that a particular set belongs to the definable family `M.S` in the indicated arity.
+
+## Lines 159ff. Graphs and definable functions
+
+### Line 159
+
+```lean
+def FunctionGraph {m n : Nat} {A : Set (Power R m)} {B : Set (Power R n)}
+```
+
+Starts the definition `FunctionGraph`; it defines the graph of a function between subtype domains. The declaration may span several following indented lines.
+
+### Line 160
+
+```lean
+    (f : {x : Power R m // A x} -> {y : Power R n // B y}) :
+```
+
+This line is part of a type signature. The expression after the colon is the result type that must be constructed.
+
+### Line 161
+
+```lean
+    Set (Power R (m + n)) :=
+```
+
+The symbol `:=` says that the following expression is the value of the definition or proof being declared.
+
+### Line 162
+
+```lean
+  fun z => exists hx : A (Power.left z),
+```
+
+This is a lambda expression. It defines a function by saying what output to return for each input.
+
+### Line 163
+
+```lean
+    Power.right z = (f (Subtype.mk (Power.left z) hx)).1
+```
+
+This line constructs an element of a subtype by giving both the underlying value and a proof that it satisfies the subtype predicate.
+
+## Lines 165ff. Index bookkeeping for relational composition
+
+### Line 165
+
+```lean
+def compGIndex {a b c : Nat} (i : Fin (a + b)) : Fin ((a + c) + b) :=
+```
+
+Starts the definition `compGIndex`; it builds the index map used to read the `G`-coordinates from an `(x,z,y)` tuple. The declaration may span several following indented lines.
+
+### Line 166
+
+```lean
+  if h : (i : Nat) < a then
+```
+
+This is a continuation line of the surrounding declaration or proof. Its indentation tells Lean it belongs to the previous syntactic construct.
+
+### Line 167
+
+```lean
+    Fin.castAdd b (Fin.castAdd c (Fin.mk (i : Nat) h))
+```
+
+This line uses `Fin` constructors or coercions to move indices between finite coordinate types.
+
+### Line 168
+
+```lean
+  else
+```
+
+This is a continuation line of the surrounding declaration or proof. Its indentation tells Lean it belongs to the previous syntactic construct.
+
+### Line 169
+
+```lean
+    Fin.natAdd (a + c) (Fin.mk ((i : Nat) - a) (by omega))
+```
+
+This line uses `Fin` constructors or coercions to move indices between finite coordinate types.
+
+### Line 171
+
+```lean
+def compHIndex {a b c : Nat} (i : Fin (b + c)) : Fin ((a + c) + b) :=
+```
+
+Starts the definition `compHIndex`; it builds the index map used to read the `H`-coordinates from an `(x,z,y)` tuple. The declaration may span several following indented lines.
+
+### Line 172
+
+```lean
+  if h : (i : Nat) < b then
+```
+
+This is a continuation line of the surrounding declaration or proof. Its indentation tells Lean it belongs to the previous syntactic construct.
+
+### Line 173
+
+```lean
+    Fin.natAdd (a + c) (Fin.mk (i : Nat) h)
+```
+
+This line uses `Fin` constructors or coercions to move indices between finite coordinate types.
+
+### Line 174
+
+```lean
+  else
+```
+
+This is a continuation line of the surrounding declaration or proof. Its indentation tells Lean it belongs to the previous syntactic construct.
+
+### Line 175
+
+```lean
+    Fin.castAdd b (Fin.natAdd a (Fin.mk ((i : Nat) - b) (by omega)))
+```
+
+This line uses `Fin` constructors or coercions to move indices between finite coordinate types.
+
+### Line 177
+
+```lean
+def compGArg {a b c : Nat} (xyz : Power R ((a + c) + b)) : Power R (a + b) :=
+```
+
+Starts the definition `compGArg`; it turns an `(x,z,y)` tuple into the `(x,y)` tuple needed by `G`. The declaration may span several following indented lines.
+
+### Line 178
+
+```lean
+  fun i => xyz (compGIndex (a := a) (b := b) (c := c) i)
+```
+
+This is a lambda expression. It defines a function by saying what output to return for each input.
+
+### Line 180
+
+```lean
+def compHArg {a b c : Nat} (xyz : Power R ((a + c) + b)) : Power R (b + c) :=
+```
+
+Starts the definition `compHArg`; it turns an `(x,z,y)` tuple into the `(y,z)` tuple needed by `H`. The declaration may span several following indented lines.
+
+### Line 181
+
+```lean
+  fun i => xyz (compHIndex (a := a) (b := b) (c := c) i)
+```
+
+This is a lambda expression. It defines a function by saying what output to return for each input.
+
+## Lines 183ff. Coordinate lemmas for composition
+
+### Line 183
+
+```lean
+theorem compGArg_append {a b c : Nat}
+```
+
+Starts theorem `compGArg_append`; it proves that the `G` projection of `(x,z,y)` is really `(x,y)` when the tuple is built by append. A theorem has a proposition as its type, and the proof follows after `:= by` or after `:=`.
+
+### Line 184
+
+```lean
+    (xz : Power R (a + c)) (y : Power R b) :
+```
+
+This line is part of a type signature. The expression after the colon is the result type that must be constructed.
+
+### Line 185
+
+```lean
+    compGArg (R := R) (a := a) (b := b) (c := c) (Power.append xz y) =
+```
+
+This line concatenates coordinate blocks using `Power.append`, which is how tuples such as `(x,y)` or `(x,z,y)` are represented.
+
+### Line 186
+
+```lean
+      Power.append (Power.left xz) y := by
+```
+
+The declaration or local proof switches into tactic mode with `by`; the following indented tactic commands construct the required term.
+
+### Line 187
+
+```lean
+  funext i
+```
+
+`funext` applies function extensionality: to prove two functions equal, it suffices to prove equal outputs for an arbitrary input.
+
+### Line 188
+
+```lean
+  change (Power.append xz y) (compGIndex (a := a) (b := b) (c := c) i) =
+```
+
+`change` replaces the current goal by a definitionally equal goal, usually to expose the exact expression to be proved.
+
+### Line 189
+
+```lean
+    (Power.append (Power.left xz) y) i
+```
+
+This line concatenates coordinate blocks using `Power.append`, which is how tuples such as `(x,y)` or `(x,z,y)` are represented.
+
+### Line 190
+
+```lean
+  by_cases h : (i : Nat) < a
+```
+
+`by_cases h : P` splits the proof into two cases: one with `h : P` and one with `h : Not P`.
+
+### Line 191
+
+```lean
+  · let ia : Fin a := Fin.mk (i : Nat) h
+```
+
+The bullet `.` or `·` starts one branch of the current proof, here one of the cases created by `by_cases` or `constructor`.
+
+### Line 192
+
+```lean
+    have hi : i = Fin.castAdd b ia := by
+```
+
+The declaration or local proof switches into tactic mode with `by`; the following indented tactic commands construct the required term.
+
+### Line 193
+
+```lean
+      ext
+```
+
+`ext` applies extensionality, often reducing equality of structures or finite indices to equality of their components.
+
+### Line 194
+
+```lean
+      simp [ia]
+```
+
+`simp` uses definitional unfolding and registered simplification lemmas to simplify the goal or hypothesis.
+
+### Line 195
+
+```lean
+    have hidx : compGIndex (a := a) (b := b) (c := c) i =
+```
+
+`have` introduces a local lemma or local named proof. The part after `:` is its type, and the proof comes after `:=` or `:= by`.
+
+### Line 196
+
+```lean
+        Fin.castAdd b (Fin.castAdd c ia) := by
+```
+
+The declaration or local proof switches into tactic mode with `by`; the following indented tactic commands construct the required term.
+
+### Line 197
+
+```lean
+      simp [compGIndex, h, ia]
+```
+
+`simp` uses definitional unfolding and registered simplification lemmas to simplify the goal or hypothesis.
+
+### Line 198
+
+```lean
+    calc
+```
+
+`calc` starts a chained calculation: each line proves equality or implication from the previous expression to the next.
+
+### Line 199
+
+```lean
+      (Power.append xz y) (compGIndex (a := a) (b := b) (c := c) i)
+```
+
+This line concatenates coordinate blocks using `Power.append`, which is how tuples such as `(x,y)` or `(x,z,y)` are represented.
+
+### Line 200
+
+```lean
+          = (Power.append xz y) (Fin.castAdd b (Fin.castAdd c ia)) := by
+```
+
+The declaration or local proof switches into tactic mode with `by`; the following indented tactic commands construct the required term.
+
+### Line 201
+
+```lean
+              rw [hidx]
+```
+
+`rw` rewrites using an equality. `rw [h] at hrel` rewrites inside the hypothesis `hrel`.
+
+### Line 202
+
+```lean
+      _ = xz (Fin.castAdd c ia) := by
+```
+
+The declaration or local proof switches into tactic mode with `by`; the following indented tactic commands construct the required term.
+
+### Line 203
+
+```lean
+              simp [Power.append]
+```
+
+`simp` uses definitional unfolding and registered simplification lemmas to simplify the goal or hypothesis.
+
+### Line 204
+
+```lean
+      _ = Power.left xz ia := by
+```
+
+The declaration or local proof switches into tactic mode with `by`; the following indented tactic commands construct the required term.
+
+### Line 205
+
+```lean
+              simp [Power.left]
+```
+
+`simp` uses definitional unfolding and registered simplification lemmas to simplify the goal or hypothesis.
+
+### Line 206
+
+```lean
+      _ = (Power.append (Power.left xz) y) (Fin.castAdd b ia) := by
+```
+
+The declaration or local proof switches into tactic mode with `by`; the following indented tactic commands construct the required term.
+
+### Line 207
+
+```lean
+              simp [Power.append]
+```
+
+`simp` uses definitional unfolding and registered simplification lemmas to simplify the goal or hypothesis.
+
+### Line 208
+
+```lean
+      _ = (Power.append (Power.left xz) y) i := by
+```
+
+The declaration or local proof switches into tactic mode with `by`; the following indented tactic commands construct the required term.
+
+### Line 209
+
+```lean
+              rw [hi]
+```
+
+`rw` rewrites using an equality. `rw [h] at hrel` rewrites inside the hypothesis `hrel`.
+
+### Line 210
+
+```lean
+  · let jb : Fin b := Fin.mk ((i : Nat) - a) (by omega)
+```
+
+The bullet `.` or `·` starts one branch of the current proof, here one of the cases created by `by_cases` or `constructor`.
+
+### Line 211
+
+```lean
+    have hi : i = Fin.natAdd a jb := by
+```
+
+The declaration or local proof switches into tactic mode with `by`; the following indented tactic commands construct the required term.
+
+### Line 212
+
+```lean
+      ext
+```
+
+`ext` applies extensionality, often reducing equality of structures or finite indices to equality of their components.
+
+### Line 213
+
+```lean
+      simp [jb]
+```
+
+`simp` uses definitional unfolding and registered simplification lemmas to simplify the goal or hypothesis.
+
+### Line 214
+
+```lean
+      omega
+```
+
+`omega` solves linear arithmetic goals over natural numbers and integers; here it proves index bounds.
+
+### Line 215
+
+```lean
+    have hidx : compGIndex (a := a) (b := b) (c := c) i =
+```
+
+`have` introduces a local lemma or local named proof. The part after `:` is its type, and the proof comes after `:=` or `:= by`.
+
+### Line 216
+
+```lean
+        Fin.natAdd (a + c) jb := by
+```
+
+The declaration or local proof switches into tactic mode with `by`; the following indented tactic commands construct the required term.
+
+### Line 217
+
+```lean
+      simp [compGIndex, h, jb]
+```
+
+`simp` uses definitional unfolding and registered simplification lemmas to simplify the goal or hypothesis.
+
+### Line 218
+
+```lean
+    calc
+```
+
+`calc` starts a chained calculation: each line proves equality or implication from the previous expression to the next.
+
+### Line 219
+
+```lean
+      (Power.append xz y) (compGIndex (a := a) (b := b) (c := c) i)
+```
+
+This line concatenates coordinate blocks using `Power.append`, which is how tuples such as `(x,y)` or `(x,z,y)` are represented.
+
+### Line 220
+
+```lean
+          = (Power.append xz y) (Fin.natAdd (a + c) jb) := by
+```
+
+The declaration or local proof switches into tactic mode with `by`; the following indented tactic commands construct the required term.
+
+### Line 221
+
+```lean
+              rw [hidx]
+```
+
+`rw` rewrites using an equality. `rw [h] at hrel` rewrites inside the hypothesis `hrel`.
+
+### Line 222
+
+```lean
+      _ = y jb := by
+```
+
+The declaration or local proof switches into tactic mode with `by`; the following indented tactic commands construct the required term.
+
+### Line 223
+
+```lean
+              simp [Power.append]
+```
+
+`simp` uses definitional unfolding and registered simplification lemmas to simplify the goal or hypothesis.
+
+### Line 224
+
+```lean
+      _ = (Power.append (Power.left xz) y) (Fin.natAdd a jb) := by
+```
+
+The declaration or local proof switches into tactic mode with `by`; the following indented tactic commands construct the required term.
+
+### Line 225
+
+```lean
+              simp [Power.append]
+```
+
+`simp` uses definitional unfolding and registered simplification lemmas to simplify the goal or hypothesis.
+
+### Line 226
+
+```lean
+      _ = (Power.append (Power.left xz) y) i := by
+```
+
+The declaration or local proof switches into tactic mode with `by`; the following indented tactic commands construct the required term.
+
+### Line 227
+
+```lean
+              rw [hi]
+```
+
+`rw` rewrites using an equality. `rw [h] at hrel` rewrites inside the hypothesis `hrel`.
+
+### Line 229
+
+```lean
+theorem compHArg_append {a b c : Nat}
+```
+
+Starts theorem `compHArg_append`; it proves that the `H` projection of `(x,z,y)` is really `(y,z)` when the tuple is built by append. A theorem has a proposition as its type, and the proof follows after `:= by` or after `:=`.
+
+### Line 230
+
+```lean
+    (xz : Power R (a + c)) (y : Power R b) :
+```
+
+This line is part of a type signature. The expression after the colon is the result type that must be constructed.
+
+### Line 231
+
+```lean
+    compHArg (R := R) (a := a) (b := b) (c := c) (Power.append xz y) =
+```
+
+This line concatenates coordinate blocks using `Power.append`, which is how tuples such as `(x,y)` or `(x,z,y)` are represented.
+
+### Line 232
+
+```lean
+      Power.append y (Power.right xz) := by
+```
+
+The declaration or local proof switches into tactic mode with `by`; the following indented tactic commands construct the required term.
+
+### Line 233
+
+```lean
+  funext i
+```
+
+`funext` applies function extensionality: to prove two functions equal, it suffices to prove equal outputs for an arbitrary input.
+
+### Line 234
+
+```lean
+  change (Power.append xz y) (compHIndex (a := a) (b := b) (c := c) i) =
+```
+
+`change` replaces the current goal by a definitionally equal goal, usually to expose the exact expression to be proved.
+
+### Line 235
+
+```lean
+    (Power.append y (Power.right xz)) i
+```
+
+This line concatenates coordinate blocks using `Power.append`, which is how tuples such as `(x,y)` or `(x,z,y)` are represented.
+
+### Line 236
+
+```lean
+  by_cases h : (i : Nat) < b
+```
+
+`by_cases h : P` splits the proof into two cases: one with `h : P` and one with `h : Not P`.
+
+### Line 237
+
+```lean
+  · let ib : Fin b := Fin.mk (i : Nat) h
+```
+
+The bullet `.` or `·` starts one branch of the current proof, here one of the cases created by `by_cases` or `constructor`.
+
+### Line 238
+
+```lean
+    have hi : i = Fin.castAdd c ib := by
+```
+
+The declaration or local proof switches into tactic mode with `by`; the following indented tactic commands construct the required term.
+
+### Line 239
+
+```lean
+      ext
+```
+
+`ext` applies extensionality, often reducing equality of structures or finite indices to equality of their components.
+
+### Line 240
+
+```lean
+      simp [ib]
+```
+
+`simp` uses definitional unfolding and registered simplification lemmas to simplify the goal or hypothesis.
+
+### Line 241
+
+```lean
+    have hidx : compHIndex (a := a) (b := b) (c := c) i =
+```
+
+`have` introduces a local lemma or local named proof. The part after `:` is its type, and the proof comes after `:=` or `:= by`.
+
+### Line 242
+
+```lean
+        Fin.natAdd (a + c) ib := by
+```
+
+The declaration or local proof switches into tactic mode with `by`; the following indented tactic commands construct the required term.
+
+### Line 243
+
+```lean
+      simp [compHIndex, h, ib]
+```
+
+`simp` uses definitional unfolding and registered simplification lemmas to simplify the goal or hypothesis.
+
+### Line 244
+
+```lean
+    calc
+```
+
+`calc` starts a chained calculation: each line proves equality or implication from the previous expression to the next.
+
+### Line 245
+
+```lean
+      (Power.append xz y) (compHIndex (a := a) (b := b) (c := c) i)
+```
+
+This line concatenates coordinate blocks using `Power.append`, which is how tuples such as `(x,y)` or `(x,z,y)` are represented.
+
+### Line 246
+
+```lean
+          = (Power.append xz y) (Fin.natAdd (a + c) ib) := by
+```
+
+The declaration or local proof switches into tactic mode with `by`; the following indented tactic commands construct the required term.
+
+### Line 247
+
+```lean
+              rw [hidx]
+```
+
+`rw` rewrites using an equality. `rw [h] at hrel` rewrites inside the hypothesis `hrel`.
+
+### Line 248
+
+```lean
+      _ = y ib := by
+```
+
+The declaration or local proof switches into tactic mode with `by`; the following indented tactic commands construct the required term.
+
+### Line 249
+
+```lean
+              simp [Power.append]
+```
+
+`simp` uses definitional unfolding and registered simplification lemmas to simplify the goal or hypothesis.
+
+### Line 250
+
+```lean
+      _ = (Power.append y (Power.right xz)) (Fin.castAdd c ib) := by
+```
+
+The declaration or local proof switches into tactic mode with `by`; the following indented tactic commands construct the required term.
+
+### Line 251
+
+```lean
+              simp [Power.append]
+```
+
+`simp` uses definitional unfolding and registered simplification lemmas to simplify the goal or hypothesis.
+
+### Line 252
+
+```lean
+      _ = (Power.append y (Power.right xz)) i := by
+```
+
+The declaration or local proof switches into tactic mode with `by`; the following indented tactic commands construct the required term.
+
+### Line 253
+
+```lean
+              rw [hi]
+```
+
+`rw` rewrites using an equality. `rw [h] at hrel` rewrites inside the hypothesis `hrel`.
+
+### Line 254
+
+```lean
+  · let jc : Fin c := Fin.mk ((i : Nat) - b) (by omega)
+```
+
+The bullet `.` or `·` starts one branch of the current proof, here one of the cases created by `by_cases` or `constructor`.
+
+### Line 255
+
+```lean
+    have hi : i = Fin.natAdd b jc := by
+```
+
+The declaration or local proof switches into tactic mode with `by`; the following indented tactic commands construct the required term.
+
+### Line 256
+
+```lean
+      ext
+```
+
+`ext` applies extensionality, often reducing equality of structures or finite indices to equality of their components.
+
+### Line 257
+
+```lean
+      simp [jc]
+```
+
+`simp` uses definitional unfolding and registered simplification lemmas to simplify the goal or hypothesis.
+
+### Line 258
+
+```lean
+      omega
+```
+
+`omega` solves linear arithmetic goals over natural numbers and integers; here it proves index bounds.
+
+### Line 259
+
+```lean
+    have hidx : compHIndex (a := a) (b := b) (c := c) i =
+```
+
+`have` introduces a local lemma or local named proof. The part after `:` is its type, and the proof comes after `:=` or `:= by`.
+
+### Line 260
+
+```lean
+        Fin.castAdd b (Fin.natAdd a jc) := by
+```
+
+The declaration or local proof switches into tactic mode with `by`; the following indented tactic commands construct the required term.
+
+### Line 261
+
+```lean
+      simp [compHIndex, h, jc]
+```
+
+`simp` uses definitional unfolding and registered simplification lemmas to simplify the goal or hypothesis.
+
+### Line 262
+
+```lean
+    calc
+```
+
+`calc` starts a chained calculation: each line proves equality or implication from the previous expression to the next.
+
+### Line 263
+
+```lean
+      (Power.append xz y) (compHIndex (a := a) (b := b) (c := c) i)
+```
+
+This line concatenates coordinate blocks using `Power.append`, which is how tuples such as `(x,y)` or `(x,z,y)` are represented.
+
+### Line 264
+
+```lean
+          = (Power.append xz y) (Fin.castAdd b (Fin.natAdd a jc)) := by
+```
+
+The declaration or local proof switches into tactic mode with `by`; the following indented tactic commands construct the required term.
+
+### Line 265
+
+```lean
+              rw [hidx]
+```
+
+`rw` rewrites using an equality. `rw [h] at hrel` rewrites inside the hypothesis `hrel`.
+
+### Line 266
+
+```lean
+      _ = xz (Fin.natAdd a jc) := by
+```
+
+The declaration or local proof switches into tactic mode with `by`; the following indented tactic commands construct the required term.
+
+### Line 267
+
+```lean
+              simp [Power.append]
+```
+
+`simp` uses definitional unfolding and registered simplification lemmas to simplify the goal or hypothesis.
+
+### Line 268
+
+```lean
+      _ = Power.right xz jc := by
+```
+
+The declaration or local proof switches into tactic mode with `by`; the following indented tactic commands construct the required term.
+
+### Line 269
+
+```lean
+              simp [Power.right]
+```
+
+`simp` uses definitional unfolding and registered simplification lemmas to simplify the goal or hypothesis.
+
+### Line 270
+
+```lean
+      _ = (Power.append y (Power.right xz)) (Fin.natAdd b jc) := by
+```
+
+The declaration or local proof switches into tactic mode with `by`; the following indented tactic commands construct the required term.
+
+### Line 271
+
+```lean
+              simp [Power.append]
+```
+
+`simp` uses definitional unfolding and registered simplification lemmas to simplify the goal or hypothesis.
+
+### Line 272
+
+```lean
+      _ = (Power.append y (Power.right xz)) i := by
+```
+
+The declaration or local proof switches into tactic mode with `by`; the following indented tactic commands construct the required term.
+
+### Line 273
+
+```lean
+              rw [hi]
+```
+
+`rw` rewrites using an equality. `rw [h] at hrel` rewrites inside the hypothesis `hrel`.
+
+## Lines 275ff. Relational composition of definable relations
+
+### Line 275
+
+```lean
+def RelationComp {m n p : Nat}
+```
+
+Starts the definition `RelationComp`; it defines relational composition by existentially quantifying the middle tuple `y`. The declaration may span several following indented lines.
+
+### Line 276
+
+```lean
+    (G : Set (Power R (m + n))) (H : Set (Power R (n + p))) :
+```
+
+This line is part of a type signature. The expression after the colon is the result type that must be constructed.
+
+### Line 277
+
+```lean
+    Set (Power R (m + p)) :=
+```
+
+The symbol `:=` says that the following expression is the value of the definition or proof being declared.
+
+### Line 278
+
+```lean
+  fun xz => exists y : Power R n,
+```
+
+This is a lambda expression. It defines a function by saying what output to return for each input.
+
+### Line 279
+
+```lean
+    G (Power.append (Power.left xz) y) /\
+```
+
+This line combines propositions using conjunction `/\` or disjunction `\/`.
+
+### Line 280
+
+```lean
+    H (Power.append y (Power.right xz))
+```
+
+This line concatenates coordinate blocks using `Power.append`, which is how tuples such as `(x,y)` or `(x,z,y)` are represented.
+
+### Line 282
+
+```lean
+theorem relation_comp_mem
+```
+
+Starts theorem `relation_comp_mem`; it proves that definable relations are closed under relational composition. A theorem has a proposition as its type, and the proof follows after `:= by` or after `:=`.
+
+### Line 283
+
+```lean
+    (M : OMinimalStructure D)
+```
+
+This is a continuation line of the surrounding declaration or proof. Its indentation tells Lean it belongs to the previous syntactic construct.
+
+### Line 284
+
+```lean
+    {a b c : Nat}
+```
+
+This is a continuation line of the surrounding declaration or proof. Its indentation tells Lean it belongs to the previous syntactic construct.
+
+### Line 285
+
+```lean
+    {G : Set (Power R (a + b))} {H : Set (Power R (b + c))}
+```
+
+This is a continuation line of the surrounding declaration or proof. Its indentation tells Lean it belongs to the previous syntactic construct.
+
+### Line 286
+
+```lean
+    (hG : M.S (a + b) G) (hH : M.S (b + c) H) :
+```
+
+This line is part of a type signature. The expression after the colon is the result type that must be constructed.
+
+### Line 287
+
+```lean
+    M.S (a + c) (RelationComp (R := R) (m := a) (n := b) (p := c) G H) := by
+```
+
+The declaration or local proof switches into tactic mode with `by`; the following indented tactic commands construct the required term.
+
+### Line 288
+
+```lean
+  have hG' :
+```
+
+`have` introduces a local lemma or local named proof. The part after `:` is its type, and the proof comes after `:=` or `:= by`.
+
+### Line 289
+
+```lean
+      M.S ((a + c) + b)
+```
+
+This line states that a particular set belongs to the definable family `M.S` in the indicated arity.
+
+### Line 290
+
+```lean
+        (fun xyz : Power R ((a + c) + b) =>
+```
+
+This is a continuation line of the surrounding declaration or proof. Its indentation tells Lean it belongs to the previous syntactic construct.
+
+### Line 291
+
+```lean
+          G (compGArg (R := R) (a := a) (b := b) (c := c) xyz)) := by
+```
+
+The declaration or local proof switches into tactic mode with `by`; the following indented tactic commands construct the required term.
+
+### Line 292
+
+```lean
+    simpa [compGArg] using
+```
+
+`simpa` simplifies both the supplied term and the goal, then uses the simplified supplied term to close the goal.
+
+### Line 293
+
+```lean
+      (M.reindex_mem
+```
+
+This line supplies arguments to a previously mentioned theorem or structure field belonging to `M`.
+
+### Line 294
+
+```lean
+        (fun i : Fin (a + b) => compGIndex (a := a) (b := b) (c := c) i)
+```
+
+This is a continuation line of the surrounding declaration or proof. Its indentation tells Lean it belongs to the previous syntactic construct.
+
+### Line 295
+
+```lean
+        hG)
+```
+
+This is a continuation line of the surrounding declaration or proof. Its indentation tells Lean it belongs to the previous syntactic construct.
+
+### Line 296
+
+```lean
+  have hH' :
+```
+
+`have` introduces a local lemma or local named proof. The part after `:` is its type, and the proof comes after `:=` or `:= by`.
+
+### Line 297
+
+```lean
+      M.S ((a + c) + b)
+```
+
+This line states that a particular set belongs to the definable family `M.S` in the indicated arity.
+
+### Line 298
+
+```lean
+        (fun xyz : Power R ((a + c) + b) =>
+```
+
+This is a continuation line of the surrounding declaration or proof. Its indentation tells Lean it belongs to the previous syntactic construct.
+
+### Line 299
+
+```lean
+          H (compHArg (R := R) (a := a) (b := b) (c := c) xyz)) := by
+```
+
+The declaration or local proof switches into tactic mode with `by`; the following indented tactic commands construct the required term.
+
+### Line 300
+
+```lean
+    simpa [compHArg] using
+```
+
+`simpa` simplifies both the supplied term and the goal, then uses the simplified supplied term to close the goal.
+
+### Line 301
+
+```lean
+      (M.reindex_mem
+```
+
+This line supplies arguments to a previously mentioned theorem or structure field belonging to `M`.
+
+### Line 302
+
+```lean
+        (fun i : Fin (b + c) => compHIndex (a := a) (b := b) (c := c) i)
+```
+
+This is a continuation line of the surrounding declaration or proof. Its indentation tells Lean it belongs to the previous syntactic construct.
+
+### Line 303
+
+```lean
+        hH)
+```
+
+This is a continuation line of the surrounding declaration or proof. Its indentation tells Lean it belongs to the previous syntactic construct.
+
+### Line 304
+
+```lean
+  have hBoth :
+```
+
+`have` introduces a local lemma or local named proof. The part after `:` is its type, and the proof comes after `:=` or `:= by`.
+
+### Line 305
+
+```lean
+      M.S ((a + c) + b)
+```
+
+This line states that a particular set belongs to the definable family `M.S` in the indicated arity.
+
+### Line 306
+
+```lean
+        (fun xyz : Power R ((a + c) + b) =>
+```
+
+This is a continuation line of the surrounding declaration or proof. Its indentation tells Lean it belongs to the previous syntactic construct.
+
+### Line 307
+
+```lean
+          G (compGArg (R := R) (a := a) (b := b) (c := c) xyz) /\
+```
+
+This line combines propositions using conjunction `/\` or disjunction `\/`.
+
+### Line 308
+
+```lean
+          H (compHArg (R := R) (a := a) (b := b) (c := c) xyz)) :=
+```
+
+The symbol `:=` says that the following expression is the value of the definition or proof being declared.
+
+### Line 309
+
+```lean
+    M.inter_mem hG' hH'
+```
+
+This line uses closure of definable sets under intersection.
+
+### Line 310
+
+```lean
+  have hProj :
+```
+
+`have` introduces a local lemma or local named proof. The part after `:` is its type, and the proof comes after `:=` or `:= by`.
+
+### Line 311
+
+```lean
+      M.S (a + c)
+```
+
+This line states that a particular set belongs to the definable family `M.S` in the indicated arity.
+
+### Line 312
+
+```lean
+        (fun xz : Power R (a + c) =>
+```
+
+This is a continuation line of the surrounding declaration or proof. Its indentation tells Lean it belongs to the previous syntactic construct.
+
+### Line 313
+
+```lean
+          exists y : Power R b,
+```
+
+This line continues an existential statement; the expression requires a witness of the indicated type.
+
+### Line 314
+
+```lean
+            G (compGArg (R := R) (a := a) (b := b) (c := c) (Power.append xz y)) /\
+```
+
+This line combines propositions using conjunction `/\` or disjunction `\/`.
+
+### Line 315
+
+```lean
+            H (compHArg (R := R) (a := a) (b := b) (c := c) (Power.append xz y))) :=
+```
+
+The symbol `:=` says that the following expression is the value of the definition or proof being declared.
+
+### Line 316
+
+```lean
+    M.existsLast_mem hBoth
+```
+
+This line uses the existential-projection closure axiom for a final block of coordinates.
+
+### Line 317
+
+```lean
+  simpa [RelationComp, compGArg_append, compHArg_append] using hProj
+```
+
+`simpa` simplifies both the supplied term and the goal, then uses the simplified supplied term to close the goal.
+
+## Lines 319ff. The graph of a composite function equals the relational composite of graphs
+
+### Line 319
+
+```lean
+theorem relationComp_functionGraph_eq {m n p : Nat}
+```
+
+Starts theorem `relationComp_functionGraph_eq`; it proves extensional equality between relational graph composition and the graph of function composition. A theorem has a proposition as its type, and the proof follows after `:= by` or after `:=`.
+
+### Line 320
+
+```lean
+    {A : Set (Power R m)} {B : Set (Power R n)} {C : Set (Power R p)}
+```
+
+This is a continuation line of the surrounding declaration or proof. Its indentation tells Lean it belongs to the previous syntactic construct.
+
+### Line 321
+
+```lean
+    (f : {x : Power R m // A x} -> {y : Power R n // B y})
+```
+
+This line contains function or implication arrows. In propositions, `P -> Q` means implication; in types, `A -> B` means a function type.
+
+### Line 322
+
+```lean
+    (g : {y : Power R n // B y} -> {z : Power R p // C z}) :
+```
+
+This line is part of a type signature. The expression after the colon is the result type that must be constructed.
+
+### Line 323
+
+```lean
+    RelationComp (R := R)
+```
+
+This is a continuation line of the surrounding declaration or proof. Its indentation tells Lean it belongs to the previous syntactic construct.
+
+### Line 324
+
+```lean
+      (FunctionGraph (R := R) (m := m) (n := n) (A := A) (B := B) f)
+```
+
+This is a continuation line of the surrounding declaration or proof. Its indentation tells Lean it belongs to the previous syntactic construct.
+
+### Line 325
+
+```lean
+      (FunctionGraph (R := R) (m := n) (n := p) (A := B) (B := C) g)
+```
+
+This is a continuation line of the surrounding declaration or proof. Its indentation tells Lean it belongs to the previous syntactic construct.
+
+### Line 326
+
+```lean
+    =
+```
+
+This is a continuation line of the surrounding declaration or proof. Its indentation tells Lean it belongs to the previous syntactic construct.
+
+### Line 327
+
+```lean
+    FunctionGraph (R := R) (m := m) (n := p) (A := A) (B := C)
+```
+
+This is a continuation line of the surrounding declaration or proof. Its indentation tells Lean it belongs to the previous syntactic construct.
+
+### Line 328
+
+```lean
+      (fun x => g (f x)) := by
+```
+
+The declaration or local proof switches into tactic mode with `by`; the following indented tactic commands construct the required term.
+
+### Line 329
+
+```lean
+  funext xz
+```
+
+`funext` applies function extensionality: to prove two functions equal, it suffices to prove equal outputs for an arbitrary input.
+
+### Line 330
+
+```lean
+  apply propext
+```
+
+`apply` reduces the goal by using a theorem or constructor whose conclusion matches the goal.
+
+### Line 331
+
+```lean
+  constructor
+```
+
+`constructor` splits a goal involving conjunction, equivalence, or a constructor-built proposition into its component goals.
+
+### Line 332
+
+```lean
+  · intro h
+```
+
+The bullet `.` or `·` starts one branch of the current proof, here one of the cases created by `by_cases` or `constructor`.
+
+### Line 333
+
+```lean
+    rcases h with ⟨y, hf, hg⟩
+```
+
+`rcases` destructures an existential or conjunction into its components, naming the witnesses and proofs.
+
+### Line 334
+
+```lean
+    have hf' : exists hx : A (Power.left xz),
+```
+
+`have` introduces a local lemma or local named proof. The part after `:` is its type, and the proof comes after `:=` or `:= by`.
+
+### Line 335
+
+```lean
+        y = (f (Subtype.mk (Power.left xz) hx)).1 := by
+```
+
+The declaration or local proof switches into tactic mode with `by`; the following indented tactic commands construct the required term.
+
+### Line 336
+
+```lean
+      simpa [FunctionGraph] using hf
+```
+
+`simpa` simplifies both the supplied term and the goal, then uses the simplified supplied term to close the goal.
+
+### Line 337
+
+```lean
+    have hg' : exists hy : B y,
+```
+
+`have` introduces a local lemma or local named proof. The part after `:` is its type, and the proof comes after `:=` or `:= by`.
+
+### Line 338
+
+```lean
+        Power.right xz = (g (Subtype.mk y hy)).1 := by
+```
+
+The declaration or local proof switches into tactic mode with `by`; the following indented tactic commands construct the required term.
+
+### Line 339
+
+```lean
+      simpa [FunctionGraph] using hg
+```
+
+`simpa` simplifies both the supplied term and the goal, then uses the simplified supplied term to close the goal.
+
+### Line 340
+
+```lean
+    rcases hf' with ⟨hx, hfy⟩
+```
+
+`rcases` destructures an existential or conjunction into its components, naming the witnesses and proofs.
+
+### Line 341
+
+```lean
+    rcases hg' with ⟨hy, hgz⟩
+```
+
+`rcases` destructures an existential or conjunction into its components, naming the witnesses and proofs.
+
+### Line 342
+
+```lean
+    refine ⟨hx, ?_⟩
+```
+
+`refine` gives a partial term for the goal; `?_` leaves a new subgoal for the missing part.
+
+### Line 343
+
+```lean
+    have hsub : (Subtype.mk y hy : {y : Power R n // B y}) =
+```
+
+`have` introduces a local lemma or local named proof. The part after `:` is its type, and the proof comes after `:=` or `:= by`.
+
+### Line 344
+
+```lean
+        f (Subtype.mk (Power.left xz) hx) := by
+```
+
+The declaration or local proof switches into tactic mode with `by`; the following indented tactic commands construct the required term.
+
+### Line 345
+
+```lean
+      apply Subtype.ext
+```
+
+`apply` reduces the goal by using a theorem or constructor whose conclusion matches the goal.
+
+### Line 346
+
+```lean
+      exact hfy
+```
+
+`exact` closes the current goal by providing a term whose type is exactly the required proposition or data type.
+
+### Line 347
+
+```lean
+    simpa [FunctionGraph, hsub] using hgz
+```
+
+`simpa` simplifies both the supplied term and the goal, then uses the simplified supplied term to close the goal.
+
+### Line 348
+
+```lean
+  · intro h
+```
+
+The bullet `.` or `·` starts one branch of the current proof, here one of the cases created by `by_cases` or `constructor`.
+
+### Line 349
+
+```lean
+    rcases h with ⟨hx, hxz⟩
+```
+
+`rcases` destructures an existential or conjunction into its components, naming the witnesses and proofs.
+
+### Line 350
+
+```lean
+    let y : Power R n := (f (Subtype.mk (Power.left xz) hx)).1
+```
+
+`let` introduces a local abbreviation. It is computational data, not a proof assumption.
+
+### Line 351
+
+```lean
+    have hfProof :
+```
+
+`have` introduces a local lemma or local named proof. The part after `:` is its type, and the proof comes after `:=` or `:= by`.
+
+### Line 352
+
+```lean
+        FunctionGraph (R := R) (m := m) (n := n) (A := A) (B := B) f
+```
+
+This is a continuation line of the surrounding declaration or proof. Its indentation tells Lean it belongs to the previous syntactic construct.
+
+### Line 353
+
+```lean
+          (Power.append (Power.left xz) y) := by
+```
+
+The declaration or local proof switches into tactic mode with `by`; the following indented tactic commands construct the required term.
+
+### Line 354
+
+```lean
+      have hfCore : exists hx0 : A (Power.left xz),
+```
+
+`have` introduces a local lemma or local named proof. The part after `:` is its type, and the proof comes after `:=` or `:= by`.
+
+### Line 355
+
+```lean
+          y = (f (Subtype.mk (Power.left xz) hx0)).1 := by
+```
+
+The declaration or local proof switches into tactic mode with `by`; the following indented tactic commands construct the required term.
+
+### Line 356
+
+```lean
+        exact Exists.intro hx rfl
+```
+
+`exact` closes the current goal by providing a term whose type is exactly the required proposition or data type.
+
+### Line 357
+
+```lean
+      simpa [FunctionGraph] using hfCore
+```
+
+`simpa` simplifies both the supplied term and the goal, then uses the simplified supplied term to close the goal.
+
+### Line 358
+
+```lean
+    have hgProof :
+```
+
+`have` introduces a local lemma or local named proof. The part after `:` is its type, and the proof comes after `:=` or `:= by`.
+
+### Line 359
+
+```lean
+        FunctionGraph (R := R) (m := n) (n := p) (A := B) (B := C) g
+```
+
+This is a continuation line of the surrounding declaration or proof. Its indentation tells Lean it belongs to the previous syntactic construct.
+
+### Line 360
+
+```lean
+          (Power.append y (Power.right xz)) := by
+```
+
+The declaration or local proof switches into tactic mode with `by`; the following indented tactic commands construct the required term.
+
+### Line 361
+
+```lean
+      have hy : B y := by
+```
+
+The declaration or local proof switches into tactic mode with `by`; the following indented tactic commands construct the required term.
+
+### Line 362
+
+```lean
+        simpa [y] using (f (Subtype.mk (Power.left xz) hx)).2
+```
+
+`simpa` simplifies both the supplied term and the goal, then uses the simplified supplied term to close the goal.
+
+### Line 363
+
+```lean
+      have hsub : (Subtype.mk y hy : {y : Power R n // B y}) =
+```
+
+`have` introduces a local lemma or local named proof. The part after `:` is its type, and the proof comes after `:=` or `:= by`.
+
+### Line 364
+
+```lean
+          f (Subtype.mk (Power.left xz) hx) := by
+```
+
+The declaration or local proof switches into tactic mode with `by`; the following indented tactic commands construct the required term.
+
+### Line 365
+
+```lean
+        apply Subtype.ext
+```
+
+`apply` reduces the goal by using a theorem or constructor whose conclusion matches the goal.
+
+### Line 366
+
+```lean
+        rfl
+```
+
+`rfl` proves equality by reflexivity, i.e. both sides reduce to the same expression.
+
+### Line 367
+
+```lean
+      have hgCore : exists hy0 : B y,
+```
+
+`have` introduces a local lemma or local named proof. The part after `:` is its type, and the proof comes after `:=` or `:= by`.
+
+### Line 368
+
+```lean
+          Power.right xz = (g (Subtype.mk y hy0)).1 := by
+```
+
+The declaration or local proof switches into tactic mode with `by`; the following indented tactic commands construct the required term.
+
+### Line 369
+
+```lean
+        refine Exists.intro hy ?_
+```
+
+`refine` gives a partial term for the goal; `?_` leaves a new subgoal for the missing part.
+
+### Line 370
+
+```lean
+        simpa [y, hsub] using hxz
+```
+
+`simpa` simplifies both the supplied term and the goal, then uses the simplified supplied term to close the goal.
+
+### Line 371
+
+```lean
+      simpa [FunctionGraph] using hgCore
+```
+
+`simpa` simplifies both the supplied term and the goal, then uses the simplified supplied term to close the goal.
+
+### Line 372
+
+```lean
+    exact Exists.intro y (And.intro hfProof hgProof)
+```
+
+`exact` closes the current goal by providing a term whose type is exactly the required proposition or data type.
+
+## Lines 374ff. Definable functions and their composition
+
+### Line 374
+
+```lean
+structure DefinableFunction (M : OMinimalStructure D) {m n : Nat}
+```
+
+Starts structure `DefinableFunction`; it packages a function between definable domains together with proof that its graph is definable. In type theory, an element of this structure is a tuple of data and proofs for all listed fields.
+
+### Line 375
+
+```lean
+    (A : Set (Power R m)) (B : Set (Power R n)) where
+```
+
+This is a continuation line of the surrounding declaration or proof. Its indentation tells Lean it belongs to the previous syntactic construct.
+
+### Line 376
+
+```lean
+  domain_mem : M.S m A
+```
+
+This field stores the proof that the domain set is definable.
+
+### Line 377
+
+```lean
+  codomain_mem : M.S n B
+```
+
+This field stores the proof that the codomain set is definable.
+
+### Line 378
+
+```lean
+  toFun : {x : Power R m // A x} -> {y : Power R n // B y}
+```
+
+This field stores the actual function, with domain and codomain expressed as subtypes carrying membership proofs.
+
+### Line 379
+
+```lean
+  graph_mem :
+```
+
+This field stores the proof that the graph of `toFun` is definable.
+
+### Line 380
+
+```lean
+    M.S (m + n) (FunctionGraph (R := R) (m := m) (n := n) (A := A) (B := B) toFun)
+```
+
+This line states that a particular set belongs to the definable family `M.S` in the indicated arity.
+
+### Line 382
+
+```lean
+def DefinableFunction.comp
+```
+
+Starts the definition `DefinableFunction.comp`; it starts a definition; the type before `:=` is the specification and the expression after `:=` is the implementation. The declaration may span several following indented lines.
+
+### Line 383
+
+```lean
+    (M : OMinimalStructure D)
+```
+
+This is a continuation line of the surrounding declaration or proof. Its indentation tells Lean it belongs to the previous syntactic construct.
+
+### Line 384
+
+```lean
+    {m n p : Nat}
+```
+
+This is a continuation line of the surrounding declaration or proof. Its indentation tells Lean it belongs to the previous syntactic construct.
+
+### Line 385
+
+```lean
+    {A : Set (Power R m)} {B : Set (Power R n)} {C : Set (Power R p)}
+```
+
+This is a continuation line of the surrounding declaration or proof. Its indentation tells Lean it belongs to the previous syntactic construct.
+
+### Line 386
+
+```lean
+    (g : DefinableFunction M B C)
+```
+
+This is a continuation line of the surrounding declaration or proof. Its indentation tells Lean it belongs to the previous syntactic construct.
+
+### Line 387
+
+```lean
+    (f : DefinableFunction M A B) :
+```
+
+This line is part of a type signature. The expression after the colon is the result type that must be constructed.
+
+### Line 388
+
+```lean
+    DefinableFunction M A C where
+```
+
+This is a continuation line of the surrounding declaration or proof. Its indentation tells Lean it belongs to the previous syntactic construct.
+
+### Line 389
+
+```lean
+  domain_mem := f.domain_mem
+```
+
+This field stores the proof that the domain set is definable.
+
+### Line 390
+
+```lean
+  codomain_mem := g.codomain_mem
+```
+
+This field stores the proof that the codomain set is definable.
+
+### Line 391
+
+```lean
+  toFun := fun x => g.toFun (f.toFun x)
+```
+
+This field stores the actual function, with domain and codomain expressed as subtypes carrying membership proofs.
+
+### Line 392
+
+```lean
+  graph_mem := by
+```
+
+The declaration or local proof switches into tactic mode with `by`; the following indented tactic commands construct the required term.
+
+### Line 393
+
+```lean
+    have hrel :=
+```
+
+The symbol `:=` says that the following expression is the value of the definition or proof being declared.
+
+### Line 394
+
+```lean
+      relation_comp_mem (R := R) (D := D) M
+```
+
+This is a continuation line of the surrounding declaration or proof. Its indentation tells Lean it belongs to the previous syntactic construct.
+
+### Line 395
+
+```lean
+        (G := FunctionGraph (R := R) (m := m) (n := n)
+```
+
+This is a continuation line of the surrounding declaration or proof. Its indentation tells Lean it belongs to the previous syntactic construct.
+
+### Line 396
+
+```lean
+          (A := A) (B := B) f.toFun)
+```
+
+This is a continuation line of the surrounding declaration or proof. Its indentation tells Lean it belongs to the previous syntactic construct.
+
+### Line 397
+
+```lean
+        (H := FunctionGraph (R := R) (m := n) (n := p)
+```
+
+This is a continuation line of the surrounding declaration or proof. Its indentation tells Lean it belongs to the previous syntactic construct.
+
+### Line 398
+
+```lean
+          (A := B) (B := C) g.toFun)
+```
+
+This is a continuation line of the surrounding declaration or proof. Its indentation tells Lean it belongs to the previous syntactic construct.
+
+### Line 399
+
+```lean
+        f.graph_mem g.graph_mem
+```
+
+This is a continuation line of the surrounding declaration or proof. Its indentation tells Lean it belongs to the previous syntactic construct.
+
+### Line 400
+
+```lean
+    have heq :=
+```
+
+The symbol `:=` says that the following expression is the value of the definition or proof being declared.
+
+### Line 401
+
+```lean
+      relationComp_functionGraph_eq (R := R)
+```
+
+This is a continuation line of the surrounding declaration or proof. Its indentation tells Lean it belongs to the previous syntactic construct.
+
+### Line 402
+
+```lean
+        (A := A) (B := B) (C := C) f.toFun g.toFun
+```
+
+This is a continuation line of the surrounding declaration or proof. Its indentation tells Lean it belongs to the previous syntactic construct.
+
+### Line 403
+
+```lean
+    rw [heq] at hrel
+```
+
+`rw` rewrites using an equality. `rw [h] at hrel` rewrites inside the hypothesis `hrel`.
+
+### Line 404
+
+```lean
+    exact hrel
+```
+
+`exact` closes the current goal by providing a term whose type is exactly the required proposition or data type.
+
+## Lines 408ff. Continuity: mathematical comment and set-theoretic encoding
+
+### Line 408
+
+```lean
+/-
+```
+
+This starts a block comment. Lean ignores everything until the matching `-/`.
+
+### Line 409
+
+```lean
+Continuity of a one-variable definable function.
+```
+
+This is explanatory prose inside the block comment; it has no effect on the Lean checker.
+
+### Line 411
+
+```lean
+Usual interval definition, for a function f : I -> R and x in I:
+```
+
+This is explanatory prose inside the block comment; it has no effect on the Lean checker.
+
+### Line 412
+
+```lean
+for every open interval (a,b) containing f(x), there are c < x < d such that
+```
+
+This is explanatory prose inside the block comment; it has no effect on the Lean checker.
+
+### Line 413
+
+```lean
+for every y in I, if c < y < d then f(y) lies in (a,b).
+```
+
+This is explanatory prose inside the block comment; it has no effect on the Lean checker.
+
+### Line 415
+
+```lean
+Using the graph G of f, this becomes:
+```
+
+This is explanatory prose inside the block comment; it has no effect on the Lean checker.
+
+### Line 416
+
+```lean
+x is continuous iff x is in I and there do not exist a,b,v such that
+```
+
+This is explanatory prose inside the block comment; it has no effect on the Lean checker.
+
+### Line 417
+
+```lean
+G(x,v), a < v < b, and no interval (c,d) around x works.
+```
+
+This is explanatory prose inside the block comment; it has no effect on the Lean checker.
+
+### Line 419
+
+```lean
+A pair c,d works iff c < x < d and there is no counterexample y,w with
+```
+
+This is explanatory prose inside the block comment; it has no effect on the Lean checker.
+
+### Line 420
+
+```lean
+y in I, c < y < d, G(y,w), and w outside (a,b).
+```
+
+This is explanatory prose inside the block comment; it has no effect on the Lean checker.
+
+### Line 422
+
+```lean
+The set-theoretic operations used below are only finite intersections,
+```
+
+This is explanatory prose inside the block comment; it has no effect on the Lean checker.
+
+### Line 423
+
+```lean
+complements, and existential projections. Universal quantifiers and implications
+```
+
+This is explanatory prose inside the block comment; it has no effect on the Lean checker.
+
+### Line 424
+
+```lean
+are rewritten using complement and existential quantification.
+```
+
+This is explanatory prose inside the block comment; it has no effect on the Lean checker.
+
+### Line 425
+
+```lean
+-/
+```
+
+This ends the preceding block comment.
+
+### Line 427
+
+```lean
+def setUniv {A : Type u} : Set A :=
+```
+
+Starts the definition `setUniv`; it defines the universal set as the complement of the empty set. The declaration may span several following indented lines.
+
+### Line 428
+
+```lean
+  setCompl setEmpty
+```
+
+This line builds a complement, corresponding to logical negation.
+
+## Lines 431ff. The interval form of continuity at a point
+
+### Line 431
+
+```lean
+def Lt1 (D : DenseLinearOrderNoEndpoints R) (x y : Power R 1) : Prop :=
+```
+
+Starts the definition `Lt1`; it defines the order relation between two one-dimensional tuples. The declaration may span several following indented lines.
+
+### Line 432
+
+```lean
+  D.lt (Power.coord1 x) (Power.coord1 y)
+```
+
+This line applies the strict order relation stored in the dense linear order structure `D`.
+
+### Line 434
+
+```lean
+def ContinuousAtOnGraph (D : DenseLinearOrderNoEndpoints R)
+```
+
+Starts the definition `ContinuousAtOnGraph`; it states interval-continuity at a point using only the graph of the function. The declaration may span several following indented lines.
+
+### Line 435
+
+```lean
+    (I : Set (Power R 1)) (G : Set (Power R 2)) (x : Power R 1) : Prop :=
+```
+
+The symbol `:=` says that the following expression is the value of the definition or proof being declared.
+
+### Line 436
+
+```lean
+  I x /\
+```
+
+This line combines propositions using conjunction `/\` or disjunction `\/`.
+
+### Line 437
+
+```lean
+  forall a b v : Power R 1,
+```
+
+This line continues a universally quantified statement; Lean treats the following variables as arbitrary.
+
+### Line 438
+
+```lean
+    G (Power.append x v) ->
+```
+
+This line contains function or implication arrows. In propositions, `P -> Q` means implication; in types, `A -> B` means a function type.
+
+### Line 439
+
+```lean
+    Lt1 D a v -> Lt1 D v b ->
+```
+
+This line contains function or implication arrows. In propositions, `P -> Q` means implication; in types, `A -> B` means a function type.
+
+### Line 440
+
+```lean
+    exists c d : Power R 1,
+```
+
+This line continues an existential statement; the expression requires a witness of the indicated type.
+
+### Line 441
+
+```lean
+      Lt1 D c x /\ Lt1 D x d /\
+```
+
+This line combines propositions using conjunction `/\` or disjunction `\/`.
+
+### Line 442
+
+```lean
+      forall y w : Power R 1,
+```
+
+This line continues a universally quantified statement; Lean treats the following variables as arbitrary.
+
+### Line 443
+
+```lean
+        I y ->
+```
+
+This line contains function or implication arrows. In propositions, `P -> Q` means implication; in types, `A -> B` means a function type.
+
+### Line 444
+
+```lean
+        Lt1 D c y -> Lt1 D y d ->
+```
+
+This line contains function or implication arrows. In propositions, `P -> Q` means implication; in types, `A -> B` means a function type.
+
+### Line 445
+
+```lean
+        G (Power.append y w) ->
+```
+
+This line contains function or implication arrows. In propositions, `P -> Q` means implication; in types, `A -> B` means a function type.
+
+### Line 446
+
+```lean
+        Lt1 D a w /\ Lt1 D w b
+```
+
+This line combines propositions using conjunction `/\` or disjunction `\/`.
+
+## Lines 448ff. Basic reindexing lemmas for definability
+
+### Line 448
+
+```lean
+theorem setUniv_mem (M : OMinimalStructure D) (n : Nat) :
+```
+
+Starts theorem `setUniv_mem`; it proves that the universal set is definable, by complementing the empty set. A theorem has a proposition as its type, and the proof follows after `:= by` or after `:=`.
+
+### Line 449
+
+```lean
+    M.S n (setUniv : Set (Power R n)) := by
+```
+
+The declaration or local proof switches into tactic mode with `by`; the following indented tactic commands construct the required term.
+
+### Line 450
+
+```lean
+  exact M.compl_mem (M.empty_mem n)
+```
+
+`exact` closes the current goal by providing a term whose type is exactly the required proposition or data type.
+
+### Line 452
+
+```lean
+def pairIndex {n : Nat} (i j : Fin n) : Fin 2 -> Fin n :=
+```
+
+Starts the definition `pairIndex`; it selects two coordinates from a larger tuple and packages them as a `Fin 2` tuple. The declaration may span several following indented lines.
+
+### Line 453
+
+```lean
+  fun k => if (k : Nat) = 0 then i else j
+```
+
+This is a lambda expression. It defines a function by saying what output to return for each input.
+
+### Line 455
+
+```lean
+def HoldsAt {n m : Nat} (A : Set (Power R n)) (sigma : Fin n -> Fin m) :
+```
+
+Starts the definition `HoldsAt`; it pulls back a relation along a coordinate map `sigma`. The declaration may span several following indented lines.
+
+### Line 456
+
+```lean
+    Set (Power R m) :=
+```
+
+The symbol `:=` says that the following expression is the value of the definition or proof being declared.
+
+### Line 457
+
+```lean
+  fun z => A (fun i : Fin n => z (sigma i))
+```
+
+This is a lambda expression. It defines a function by saying what output to return for each input.
+
+### Line 459
+
+```lean
+def DomainOn {n : Nat} (I : Set (Power R 1)) (i : Fin n) : Set (Power R n) :=
+```
+
+Starts the definition `DomainOn`; it says that one chosen coordinate of a larger tuple lies in the one-dimensional set `I`. The declaration may span several following indented lines.
+
+### Line 460
+
+```lean
+  HoldsAt I (fun _ : Fin 1 => i)
+```
+
+This is a continuation line of the surrounding declaration or proof. Its indentation tells Lean it belongs to the previous syntactic construct.
+
+### Line 462
+
+```lean
+def GraphOn {n : Nat} (G : Set (Power R 2)) (i j : Fin n) : Set (Power R n) :=
+```
+
+Starts the definition `GraphOn`; it says that two chosen coordinates of a larger tuple satisfy the graph relation `G`. The declaration may span several following indented lines.
+
+### Line 463
+
+```lean
+  HoldsAt G (pairIndex i j)
+```
+
+This is a continuation line of the surrounding declaration or proof. Its indentation tells Lean it belongs to the previous syntactic construct.
+
+### Line 465
+
+```lean
+def LtOn (D : DenseLinearOrderNoEndpoints R) {n : Nat} (i j : Fin n) :
+```
+
+Starts the definition `LtOn`; it says that one chosen coordinate is less than another chosen coordinate. The declaration may span several following indented lines.
+
+### Line 466
+
+```lean
+    Set (Power R n) :=
+```
+
+The symbol `:=` says that the following expression is the value of the definition or proof being declared.
+
+### Line 467
+
+```lean
+  HoldsAt (fun p : Power R 2 => D.lt (Power.coord2_0 p) (Power.coord2_1 p))
+```
+
+This line applies the strict order relation stored in the dense linear order structure `D`.
+
+### Line 468
+
+```lean
+    (pairIndex i j)
+```
+
+This is a continuation line of the surrounding declaration or proof. Its indentation tells Lean it belongs to the previous syntactic construct.
+
+### Line 470
+
+```lean
+theorem holdsAt_mem (M : OMinimalStructure D)
+```
+
+Starts theorem `holdsAt_mem`; it proves that definability is preserved by coordinate reindexing. A theorem has a proposition as its type, and the proof follows after `:= by` or after `:=`.
+
+### Line 471
+
+```lean
+    {n m : Nat} {A : Set (Power R n)} (sigma : Fin n -> Fin m)
+```
+
+This line contains function or implication arrows. In propositions, `P -> Q` means implication; in types, `A -> B` means a function type.
+
+### Line 472
+
+```lean
+    (hA : M.S n A) :
+```
+
+This line is part of a type signature. The expression after the colon is the result type that must be constructed.
+
+### Line 473
+
+```lean
+    M.S m (HoldsAt A sigma) := by
+```
+
+The declaration or local proof switches into tactic mode with `by`; the following indented tactic commands construct the required term.
+
+### Line 474
+
+```lean
+  simpa [HoldsAt] using M.reindex_mem sigma hA
+```
+
+`simpa` simplifies both the supplied term and the goal, then uses the simplified supplied term to close the goal.
+
+### Line 476
+
+```lean
+theorem domainOn_mem (M : OMinimalStructure D)
+```
+
+Starts theorem `domainOn_mem`; it specializes reindexing to membership in the domain set. A theorem has a proposition as its type, and the proof follows after `:= by` or after `:=`.
+
+### Line 477
+
+```lean
+    {n : Nat} {I : Set (Power R 1)} (hI : M.S 1 I) (i : Fin n) :
+```
+
+This line is part of a type signature. The expression after the colon is the result type that must be constructed.
+
+### Line 478
+
+```lean
+    M.S n (DomainOn I i) := by
+```
+
+The declaration or local proof switches into tactic mode with `by`; the following indented tactic commands construct the required term.
+
+### Line 479
+
+```lean
+  simpa [DomainOn] using
+```
+
+`simpa` simplifies both the supplied term and the goal, then uses the simplified supplied term to close the goal.
+
+### Line 480
+
+```lean
+    (holdsAt_mem (R := R) (D := D) M (fun _ : Fin 1 => i) hI)
+```
+
+This is a continuation line of the surrounding declaration or proof. Its indentation tells Lean it belongs to the previous syntactic construct.
+
+### Line 482
+
+```lean
+theorem graphOn_mem (M : OMinimalStructure D)
+```
+
+Starts theorem `graphOn_mem`; it specializes reindexing to membership in a binary graph relation. A theorem has a proposition as its type, and the proof follows after `:= by` or after `:=`.
+
+### Line 483
+
+```lean
+    {n : Nat} {G : Set (Power R 2)} (hG : M.S 2 G) (i j : Fin n) :
+```
+
+This line is part of a type signature. The expression after the colon is the result type that must be constructed.
+
+### Line 484
+
+```lean
+    M.S n (GraphOn G i j) := by
+```
+
+The declaration or local proof switches into tactic mode with `by`; the following indented tactic commands construct the required term.
+
+### Line 485
+
+```lean
+  simpa [GraphOn] using
+```
+
+`simpa` simplifies both the supplied term and the goal, then uses the simplified supplied term to close the goal.
+
+### Line 486
+
+```lean
+    (holdsAt_mem (R := R) (D := D) M (pairIndex i j) hG)
+```
+
+This is a continuation line of the surrounding declaration or proof. Its indentation tells Lean it belongs to the previous syntactic construct.
+
+### Line 488
+
+```lean
+theorem ltOn_mem (M : OMinimalStructure D)
+```
+
+Starts theorem `ltOn_mem`; it specializes reindexing to the order relation. A theorem has a proposition as its type, and the proof follows after `:= by` or after `:=`.
+
+### Line 489
+
+```lean
+    {n : Nat} (i j : Fin n) :
+```
+
+This line is part of a type signature. The expression after the colon is the result type that must be constructed.
+
+### Line 490
+
+```lean
+    M.S n (LtOn D i j) := by
+```
+
+The declaration or local proof switches into tactic mode with `by`; the following indented tactic commands construct the required term.
+
+### Line 491
+
+```lean
+  simpa [LtOn] using
+```
+
+`simpa` simplifies both the supplied term and the goal, then uses the simplified supplied term to close the goal.
+
+### Line 492
+
+```lean
+    (holdsAt_mem (R := R) (D := D) M (pairIndex i j) M.lt_mem)
+```
+
+This is a continuation line of the surrounding declaration or proof. Its indentation tells Lean it belongs to the previous syntactic construct.
+
+## Lines 494ff. Reusable definable pieces: inequalities, graph conditions, neighbourhoods
+
+### Line 494
+
+```lean
+def ValueIntervalAt (D : DenseLinearOrderNoEndpoints R)
+```
+
+Starts the definition `ValueIntervalAt`; it encodes `a < w < b` at chosen coordinates. The declaration may span several following indented lines.
+
+### Line 495
+
+```lean
+    {n : Nat} (a w b : Fin n) : Set (Power R n) :=
+```
+
+The symbol `:=` says that the following expression is the value of the definition or proof being declared.
+
+### Line 496
+
+```lean
+  setInter (LtOn D a w) (LtOn D w b)
+```
+
+This line builds an intersection, corresponding to logical conjunction.
+
+### Line 498
+
+```lean
+def NeighbourhoodAt (D : DenseLinearOrderNoEndpoints R)
+```
+
+Starts the definition `NeighbourhoodAt`; it encodes `c < x < d` at chosen coordinates. The declaration may span several following indented lines.
+
+### Line 499
+
+```lean
+    {n : Nat} (c x d : Fin n) : Set (Power R n) :=
+```
+
+The symbol `:=` says that the following expression is the value of the definition or proof being declared.
+
+### Line 500
+
+```lean
+  setInter (LtOn D c x) (LtOn D x d)
+```
+
+This line builds an intersection, corresponding to logical conjunction.
+
+### Line 502
+
+```lean
+def CoreAt (D : DenseLinearOrderNoEndpoints R)
+```
+
+Starts the definition `CoreAt`; it encodes `G(x,v)` together with `a < v < b`. The declaration may span several following indented lines.
+
+### Line 503
+
+```lean
+    {n : Nat} (G : Set (Power R 2)) (x a b v : Fin n) : Set (Power R n) :=
+```
+
+The symbol `:=` says that the following expression is the value of the definition or proof being declared.
+
+### Line 504
+
+```lean
+  setInter (GraphOn G x v) (ValueIntervalAt D a v b)
+```
+
+This line builds an intersection, corresponding to logical conjunction.
+
+### Line 506
+
+```lean
+theorem valueIntervalAt_mem (M : OMinimalStructure D)
+```
+
+Starts theorem `valueIntervalAt_mem`; it proves that `a < w < b` is definable. A theorem has a proposition as its type, and the proof follows after `:= by` or after `:=`.
+
+### Line 507
+
+```lean
+    {n : Nat} (a w b : Fin n) :
+```
+
+This line is part of a type signature. The expression after the colon is the result type that must be constructed.
+
+### Line 508
+
+```lean
+    M.S n (ValueIntervalAt D a w b) := by
+```
+
+The declaration or local proof switches into tactic mode with `by`; the following indented tactic commands construct the required term.
+
+### Line 509
+
+```lean
+  exact M.inter_mem (ltOn_mem (R := R) (D := D) M a w)
+```
+
+`exact` closes the current goal by providing a term whose type is exactly the required proposition or data type.
+
+### Line 510
+
+```lean
+    (ltOn_mem (R := R) (D := D) M w b)
+```
+
+This is a continuation line of the surrounding declaration or proof. Its indentation tells Lean it belongs to the previous syntactic construct.
+
+### Line 512
+
+```lean
+theorem neighbourhoodAt_mem (M : OMinimalStructure D)
+```
+
+Starts theorem `neighbourhoodAt_mem`; it proves that `c < x < d` is definable. A theorem has a proposition as its type, and the proof follows after `:= by` or after `:=`.
+
+### Line 513
+
+```lean
+    {n : Nat} (c x d : Fin n) :
+```
+
+This line is part of a type signature. The expression after the colon is the result type that must be constructed.
+
+### Line 514
+
+```lean
+    M.S n (NeighbourhoodAt D c x d) := by
+```
+
+The declaration or local proof switches into tactic mode with `by`; the following indented tactic commands construct the required term.
+
+### Line 515
+
+```lean
+  exact M.inter_mem (ltOn_mem (R := R) (D := D) M c x)
+```
+
+`exact` closes the current goal by providing a term whose type is exactly the required proposition or data type.
+
+### Line 516
+
+```lean
+    (ltOn_mem (R := R) (D := D) M x d)
+```
+
+This is a continuation line of the surrounding declaration or proof. Its indentation tells Lean it belongs to the previous syntactic construct.
+
+### Line 518
+
+```lean
+theorem coreAt_mem (M : OMinimalStructure D)
+```
+
+Starts theorem `coreAt_mem`; it proves that the basic graph-and-value-interval condition is definable. A theorem has a proposition as its type, and the proof follows after `:= by` or after `:=`.
+
+### Line 519
+
+```lean
+    {n : Nat} {G : Set (Power R 2)} (hG : M.S 2 G) (x a b v : Fin n) :
+```
+
+This line is part of a type signature. The expression after the colon is the result type that must be constructed.
+
+### Line 520
+
+```lean
+    M.S n (CoreAt D G x a b v) := by
+```
+
+The declaration or local proof switches into tactic mode with `by`; the following indented tactic commands construct the required term.
+
+### Line 521
+
+```lean
+  exact M.inter_mem (graphOn_mem (R := R) (D := D) M hG x v)
+```
+
+`exact` closes the current goal by providing a term whose type is exactly the required proposition or data type.
+
+### Line 522
+
+```lean
+    (valueIntervalAt_mem (R := R) (D := D) M a v b)
+```
+
+This is a continuation line of the surrounding declaration or proof. Its indentation tells Lean it belongs to the previous syntactic construct.
+
+## Lines 524ff. The counterexample construction for continuity
+
+### Line 524
+
+```lean
+-- Variables in arity 8 are ordered as x,a,b,v,c,d,y,w.
+```
+
+This is a single-line comment. Lean ignores it; it documents the intended order of variables.
+
+### Line 525
+
+```lean
+def Counter8 (D : DenseLinearOrderNoEndpoints R)
+```
+
+Starts the definition `Counter8`; it encodes a counterexample `y,w` to a proposed neighbourhood `(c,d)`. The declaration may span several following indented lines.
+
+### Line 526
+
+```lean
+    (I : Set (Power R 1)) (G : Set (Power R 2)) : Set (Power R 8) :=
+```
+
+The symbol `:=` says that the following expression is the value of the definition or proof being declared.
+
+### Line 527
+
+```lean
+  setInter
+```
+
+This line builds an intersection, corresponding to logical conjunction.
+
+### Line 528
+
+```lean
+    (setInter
+```
+
+This line builds an intersection, corresponding to logical conjunction.
+
+### Line 529
+
+```lean
+      (setInter
+```
+
+This line builds an intersection, corresponding to logical conjunction.
+
+### Line 530
+
+```lean
+        (setInter
+```
+
+This line builds an intersection, corresponding to logical conjunction.
+
+### Line 531
+
+```lean
+          (DomainOn I (6 : Fin 8))
+```
+
+This is a continuation line of the surrounding declaration or proof. Its indentation tells Lean it belongs to the previous syntactic construct.
+
+### Line 532
+
+```lean
+          (LtOn D (4 : Fin 8) (6 : Fin 8)))
+```
+
+This is a continuation line of the surrounding declaration or proof. Its indentation tells Lean it belongs to the previous syntactic construct.
+
+### Line 533
+
+```lean
+        (LtOn D (6 : Fin 8) (5 : Fin 8)))
+```
+
+This is a continuation line of the surrounding declaration or proof. Its indentation tells Lean it belongs to the previous syntactic construct.
+
+### Line 534
+
+```lean
+      (GraphOn G (6 : Fin 8) (7 : Fin 8)))
+```
+
+This is a continuation line of the surrounding declaration or proof. Its indentation tells Lean it belongs to the previous syntactic construct.
+
+### Line 535
+
+```lean
+    (setCompl (ValueIntervalAt D (1 : Fin 8) (7 : Fin 8) (2 : Fin 8)))
+```
+
+This line builds a complement, corresponding to logical negation.
+
+### Line 537
+
+```lean
+theorem counter8_mem (M : OMinimalStructure D)
+```
+
+Starts theorem `counter8_mem`; it proves that the 8-variable counterexample relation is definable. A theorem has a proposition as its type, and the proof follows after `:= by` or after `:=`.
+
+### Line 538
+
+```lean
+    {I : Set (Power R 1)} {G : Set (Power R 2)}
+```
+
+This is a continuation line of the surrounding declaration or proof. Its indentation tells Lean it belongs to the previous syntactic construct.
+
+### Line 539
+
+```lean
+    (hI : M.S 1 I) (hG : M.S 2 G) :
+```
+
+This line is part of a type signature. The expression after the colon is the result type that must be constructed.
+
+### Line 540
+
+```lean
+    M.S 8 (Counter8 D I G) := by
+```
+
+The declaration or local proof switches into tactic mode with `by`; the following indented tactic commands construct the required term.
+
+### Line 541
+
+```lean
+  have hDomain : M.S 8 (DomainOn I (6 : Fin 8)) :=
+```
+
+The symbol `:=` says that the following expression is the value of the definition or proof being declared.
+
+### Line 542
+
+```lean
+    domainOn_mem (R := R) (D := D) M hI (6 : Fin 8)
+```
+
+This is a continuation line of the surrounding declaration or proof. Its indentation tells Lean it belongs to the previous syntactic construct.
+
+### Line 543
+
+```lean
+  have hcy : M.S 8 (LtOn D (4 : Fin 8) (6 : Fin 8)) :=
+```
+
+The symbol `:=` says that the following expression is the value of the definition or proof being declared.
+
+### Line 544
+
+```lean
+    ltOn_mem (R := R) (D := D) M (4 : Fin 8) (6 : Fin 8)
+```
+
+This is a continuation line of the surrounding declaration or proof. Its indentation tells Lean it belongs to the previous syntactic construct.
+
+### Line 545
+
+```lean
+  have hyd : M.S 8 (LtOn D (6 : Fin 8) (5 : Fin 8)) :=
+```
+
+The symbol `:=` says that the following expression is the value of the definition or proof being declared.
+
+### Line 546
+
+```lean
+    ltOn_mem (R := R) (D := D) M (6 : Fin 8) (5 : Fin 8)
+```
+
+This is a continuation line of the surrounding declaration or proof. Its indentation tells Lean it belongs to the previous syntactic construct.
+
+### Line 547
+
+```lean
+  have hGraph : M.S 8 (GraphOn G (6 : Fin 8) (7 : Fin 8)) :=
+```
+
+The symbol `:=` says that the following expression is the value of the definition or proof being declared.
+
+### Line 548
+
+```lean
+    graphOn_mem (R := R) (D := D) M hG (6 : Fin 8) (7 : Fin 8)
+```
+
+This is a continuation line of the surrounding declaration or proof. Its indentation tells Lean it belongs to the previous syntactic construct.
+
+### Line 549
+
+```lean
+  have hInside : M.S 8 (ValueIntervalAt D (1 : Fin 8) (7 : Fin 8) (2 : Fin 8)) :=
+```
+
+The symbol `:=` says that the following expression is the value of the definition or proof being declared.
+
+### Line 550
+
+```lean
+    valueIntervalAt_mem (R := R) (D := D) M (1 : Fin 8) (7 : Fin 8) (2 : Fin 8)
+```
+
+This is a continuation line of the surrounding declaration or proof. Its indentation tells Lean it belongs to the previous syntactic construct.
+
+### Line 551
+
+```lean
+  have hNotInside : M.S 8 (setCompl (ValueIntervalAt D (1 : Fin 8) (7 : Fin 8) (2 : Fin 8))) :=
+```
+
+The symbol `:=` says that the following expression is the value of the definition or proof being declared.
+
+### Line 552
+
+```lean
+    M.compl_mem hInside
+```
+
+This line uses closure of definable sets under complement.
+
+### Line 553
+
+```lean
+  exact M.inter_mem
+```
+
+`exact` closes the current goal by providing a term whose type is exactly the required proposition or data type.
+
+### Line 554
+
+```lean
+    (M.inter_mem
+```
+
+This line supplies arguments to a previously mentioned theorem or structure field belonging to `M`.
+
+### Line 555
+
+```lean
+      (M.inter_mem
+```
+
+This line supplies arguments to a previously mentioned theorem or structure field belonging to `M`.
+
+### Line 556
+
+```lean
+        (M.inter_mem hDomain hcy)
+```
+
+This line supplies arguments to a previously mentioned theorem or structure field belonging to `M`.
+
+### Line 557
+
+```lean
+        hyd)
+```
+
+This is a continuation line of the surrounding declaration or proof. Its indentation tells Lean it belongs to the previous syntactic construct.
+
+### Line 558
+
+```lean
+      hGraph)
+```
+
+This is a continuation line of the surrounding declaration or proof. Its indentation tells Lean it belongs to the previous syntactic construct.
+
+### Line 559
+
+```lean
+    hNotInside
+```
+
+This is a continuation line of the surrounding declaration or proof. Its indentation tells Lean it belongs to the previous syntactic construct.
+
+## Lines 561ff. Projecting away counterexample variables
+
+### Line 561
+
+```lean
+-- Variables in arity 6 are ordered as x,a,b,v,c,d.
+```
+
+This is a single-line comment. Lean ignores it; it documents the intended order of variables.
+
+### Line 562
+
+```lean
+def CounterExists6 (D : DenseLinearOrderNoEndpoints R)
+```
+
+Starts the definition `CounterExists6`; it projects away `y,w`, saying some counterexample exists. The declaration may span several following indented lines.
+
+### Line 563
+
+```lean
+    (I : Set (Power R 1)) (G : Set (Power R 2)) : Set (Power R 6) :=
+```
+
+The symbol `:=` says that the following expression is the value of the definition or proof being declared.
+
+### Line 564
+
+```lean
+  fun z => exists yw : Power R 2,
+```
+
+This is a lambda expression. It defines a function by saying what output to return for each input.
+
+### Line 565
+
+```lean
+    Counter8 D I G (Power.append z yw)
+```
+
+This line concatenates coordinate blocks using `Power.append`, which is how tuples such as `(x,y)` or `(x,z,y)` are represented.
+
+### Line 567
+
+```lean
+theorem counterExists6_mem (M : OMinimalStructure D)
+```
+
+Starts theorem `counterExists6_mem`; it proves definability after projecting away the counterexample variables `y,w`. A theorem has a proposition as its type, and the proof follows after `:= by` or after `:=`.
+
+### Line 568
+
+```lean
+    {I : Set (Power R 1)} {G : Set (Power R 2)}
+```
+
+This is a continuation line of the surrounding declaration or proof. Its indentation tells Lean it belongs to the previous syntactic construct.
+
+### Line 569
+
+```lean
+    (hI : M.S 1 I) (hG : M.S 2 G) :
+```
+
+This line is part of a type signature. The expression after the colon is the result type that must be constructed.
+
+### Line 570
+
+```lean
+    M.S 6 (CounterExists6 D I G) := by
+```
+
+The declaration or local proof switches into tactic mode with `by`; the following indented tactic commands construct the required term.
+
+### Line 571
+
+```lean
+  simpa [CounterExists6] using
+```
+
+`simpa` simplifies both the supplied term and the goal, then uses the simplified supplied term to close the goal.
+
+### Line 572
+
+```lean
+    (M.existsLast_mem (n := 6) (m := 2)
+```
+
+This line supplies arguments to a previously mentioned theorem or structure field belonging to `M`.
+
+### Line 573
+
+```lean
+      (counter8_mem (R := R) (D := D) M hI hG))
+```
+
+This is a continuation line of the surrounding declaration or proof. Its indentation tells Lean it belongs to the previous syntactic construct.
+
+## Lines 575ff. Good neighbourhood data and bad intervals
+
+### Line 575
+
+```lean
+def Good6 (D : DenseLinearOrderNoEndpoints R)
+```
+
+Starts the definition `Good6`; it says `(c,d)` is a good neighbourhood for the data `(x,a,b,v)`. The declaration may span several following indented lines.
+
+### Line 576
+
+```lean
+    (I : Set (Power R 1)) (G : Set (Power R 2)) : Set (Power R 6) :=
+```
+
+The symbol `:=` says that the following expression is the value of the definition or proof being declared.
+
+### Line 577
+
+```lean
+  setInter
+```
+
+This line builds an intersection, corresponding to logical conjunction.
+
+### Line 578
+
+```lean
+    (setInter
+```
+
+This line builds an intersection, corresponding to logical conjunction.
+
+### Line 579
+
+```lean
+      (CoreAt D G (0 : Fin 6) (1 : Fin 6) (2 : Fin 6) (3 : Fin 6))
+```
+
+This is a continuation line of the surrounding declaration or proof. Its indentation tells Lean it belongs to the previous syntactic construct.
+
+### Line 580
+
+```lean
+      (NeighbourhoodAt D (4 : Fin 6) (0 : Fin 6) (5 : Fin 6)))
+```
+
+This is a continuation line of the surrounding declaration or proof. Its indentation tells Lean it belongs to the previous syntactic construct.
+
+### Line 581
+
+```lean
+    (setCompl (CounterExists6 D I G))
+```
+
+This line builds a complement, corresponding to logical negation.
+
+### Line 583
+
+```lean
+theorem good6_mem (M : OMinimalStructure D)
+```
+
+Starts theorem `good6_mem`; it proves that the relation of good neighbourhood data is definable. A theorem has a proposition as its type, and the proof follows after `:= by` or after `:=`.
+
+### Line 584
+
+```lean
+    {I : Set (Power R 1)} {G : Set (Power R 2)}
+```
+
+This is a continuation line of the surrounding declaration or proof. Its indentation tells Lean it belongs to the previous syntactic construct.
+
+### Line 585
+
+```lean
+    (hI : M.S 1 I) (hG : M.S 2 G) :
+```
+
+This line is part of a type signature. The expression after the colon is the result type that must be constructed.
+
+### Line 586
+
+```lean
+    M.S 6 (Good6 D I G) := by
+```
+
+The declaration or local proof switches into tactic mode with `by`; the following indented tactic commands construct the required term.
+
+### Line 587
+
+```lean
+  have hCore : M.S 6 (CoreAt D G (0 : Fin 6) (1 : Fin 6) (2 : Fin 6) (3 : Fin 6)) :=
+```
+
+The symbol `:=` says that the following expression is the value of the definition or proof being declared.
+
+### Line 588
+
+```lean
+    coreAt_mem (R := R) (D := D) M hG (0 : Fin 6) (1 : Fin 6) (2 : Fin 6) (3 : Fin 6)
+```
+
+This is a continuation line of the surrounding declaration or proof. Its indentation tells Lean it belongs to the previous syntactic construct.
+
+### Line 589
+
+```lean
+  have hNhd : M.S 6 (NeighbourhoodAt D (4 : Fin 6) (0 : Fin 6) (5 : Fin 6)) :=
+```
+
+The symbol `:=` says that the following expression is the value of the definition or proof being declared.
+
+### Line 590
+
+```lean
+    neighbourhoodAt_mem (R := R) (D := D) M (4 : Fin 6) (0 : Fin 6) (5 : Fin 6)
+```
+
+This is a continuation line of the surrounding declaration or proof. Its indentation tells Lean it belongs to the previous syntactic construct.
+
+### Line 591
+
+```lean
+  have hNoCounter : M.S 6 (setCompl (CounterExists6 D I G)) :=
+```
+
+The symbol `:=` says that the following expression is the value of the definition or proof being declared.
+
+### Line 592
+
+```lean
+    M.compl_mem (counterExists6_mem (R := R) (D := D) M hI hG)
+```
+
+This line uses closure of definable sets under complement.
+
+### Line 593
+
+```lean
+  exact M.inter_mem (M.inter_mem hCore hNhd) hNoCounter
+```
+
+`exact` closes the current goal by providing a term whose type is exactly the required proposition or data type.
+
+### Line 595
+
+```lean
+-- Variables in arity 4 are ordered as x,a,b,v.
+```
+
+This is a single-line comment. Lean ignores it; it documents the intended order of variables.
+
+### Line 596
+
+```lean
+def GoodExists4 (D : DenseLinearOrderNoEndpoints R)
+```
+
+Starts the definition `GoodExists4`; it projects away `c,d`, saying some good neighbourhood exists. The declaration may span several following indented lines.
+
+### Line 597
+
+```lean
+    (I : Set (Power R 1)) (G : Set (Power R 2)) : Set (Power R 4) :=
+```
+
+The symbol `:=` says that the following expression is the value of the definition or proof being declared.
+
+### Line 598
+
+```lean
+  fun z => exists cd : Power R 2,
+```
+
+This is a lambda expression. It defines a function by saying what output to return for each input.
+
+### Line 599
+
+```lean
+    Good6 D I G (Power.append z cd)
+```
+
+This line concatenates coordinate blocks using `Power.append`, which is how tuples such as `(x,y)` or `(x,z,y)` are represented.
+
+### Line 601
+
+```lean
+theorem goodExists4_mem (M : OMinimalStructure D)
+```
+
+Starts theorem `goodExists4_mem`; it proves definability after projecting away the good neighbourhood variables `c,d`. A theorem has a proposition as its type, and the proof follows after `:= by` or after `:=`.
+
+### Line 602
+
+```lean
+    {I : Set (Power R 1)} {G : Set (Power R 2)}
+```
+
+This is a continuation line of the surrounding declaration or proof. Its indentation tells Lean it belongs to the previous syntactic construct.
+
+### Line 603
+
+```lean
+    (hI : M.S 1 I) (hG : M.S 2 G) :
+```
+
+This line is part of a type signature. The expression after the colon is the result type that must be constructed.
+
+### Line 604
+
+```lean
+    M.S 4 (GoodExists4 D I G) := by
+```
+
+The declaration or local proof switches into tactic mode with `by`; the following indented tactic commands construct the required term.
+
+### Line 605
+
+```lean
+  simpa [GoodExists4] using
+```
+
+`simpa` simplifies both the supplied term and the goal, then uses the simplified supplied term to close the goal.
+
+### Line 606
+
+```lean
+    (M.existsLast_mem (n := 4) (m := 2)
+```
+
+This line supplies arguments to a previously mentioned theorem or structure field belonging to `M`.
+
+### Line 607
+
+```lean
+      (good6_mem (R := R) (D := D) M hI hG))
+```
+
+This is a continuation line of the surrounding declaration or proof. Its indentation tells Lean it belongs to the previous syntactic construct.
+
+### Line 609
+
+```lean
+def Bad4 (D : DenseLinearOrderNoEndpoints R)
+```
+
+Starts the definition `Bad4`; it says `(a,b,v)` witnesses failure of continuity at `x`. The declaration may span several following indented lines.
+
+### Line 610
+
+```lean
+    (I : Set (Power R 1)) (G : Set (Power R 2)) : Set (Power R 4) :=
+```
+
+The symbol `:=` says that the following expression is the value of the definition or proof being declared.
+
+### Line 611
+
+```lean
+  setInter
+```
+
+This line builds an intersection, corresponding to logical conjunction.
+
+### Line 612
+
+```lean
+    (CoreAt D G (0 : Fin 4) (1 : Fin 4) (2 : Fin 4) (3 : Fin 4))
+```
+
+This is a continuation line of the surrounding declaration or proof. Its indentation tells Lean it belongs to the previous syntactic construct.
+
+### Line 613
+
+```lean
+    (setCompl (GoodExists4 D I G))
+```
+
+This line builds a complement, corresponding to logical negation.
+
+### Line 615
+
+```lean
+theorem bad4_mem (M : OMinimalStructure D)
+```
+
+Starts theorem `bad4_mem`; it proves the four-variable bad interval witness relation is definable. A theorem has a proposition as its type, and the proof follows after `:= by` or after `:=`.
+
+### Line 616
+
+```lean
+    {I : Set (Power R 1)} {G : Set (Power R 2)}
+```
+
+This is a continuation line of the surrounding declaration or proof. Its indentation tells Lean it belongs to the previous syntactic construct.
+
+### Line 617
+
+```lean
+    (hI : M.S 1 I) (hG : M.S 2 G) :
+```
+
+This line is part of a type signature. The expression after the colon is the result type that must be constructed.
+
+### Line 618
+
+```lean
+    M.S 4 (Bad4 D I G) := by
+```
+
+The declaration or local proof switches into tactic mode with `by`; the following indented tactic commands construct the required term.
+
+### Line 619
+
+```lean
+  have hCore : M.S 4 (CoreAt D G (0 : Fin 4) (1 : Fin 4) (2 : Fin 4) (3 : Fin 4)) :=
+```
+
+The symbol `:=` says that the following expression is the value of the definition or proof being declared.
+
+### Line 620
+
+```lean
+    coreAt_mem (R := R) (D := D) M hG (0 : Fin 4) (1 : Fin 4) (2 : Fin 4) (3 : Fin 4)
+```
+
+This is a continuation line of the surrounding declaration or proof. Its indentation tells Lean it belongs to the previous syntactic construct.
+
+### Line 621
+
+```lean
+  have hNoGood : M.S 4 (setCompl (GoodExists4 D I G)) :=
+```
+
+The symbol `:=` says that the following expression is the value of the definition or proof being declared.
+
+### Line 622
+
+```lean
+    M.compl_mem (goodExists4_mem (R := R) (D := D) M hI hG)
+```
+
+This line uses closure of definable sets under complement.
+
+### Line 623
+
+```lean
+  exact M.inter_mem hCore hNoGood
+```
+
+`exact` closes the current goal by providing a term whose type is exactly the required proposition or data type.
+
+### Line 625
+
+```lean
+def BadPoint1 (D : DenseLinearOrderNoEndpoints R)
+```
+
+Starts the definition `BadPoint1`; it projects away `a,b,v`, saying `x` is a bad point. The declaration may span several following indented lines.
+
+### Line 626
+
+```lean
+    (I : Set (Power R 1)) (G : Set (Power R 2)) : Set (Power R 1) :=
+```
+
+The symbol `:=` says that the following expression is the value of the definition or proof being declared.
+
+### Line 627
+
+```lean
+  fun x => exists abv : Power R 3,
+```
+
+This is a lambda expression. It defines a function by saying what output to return for each input.
+
+### Line 628
+
+```lean
+    Bad4 D I G (Power.append x abv)
+```
+
+This line concatenates coordinate blocks using `Power.append`, which is how tuples such as `(x,y)` or `(x,z,y)` are represented.
+
+### Line 630
+
+```lean
+theorem badPoint1_mem (M : OMinimalStructure D)
+```
+
+Starts theorem `badPoint1_mem`; it proves the set of bad points is definable. A theorem has a proposition as its type, and the proof follows after `:= by` or after `:=`.
+
+### Line 631
+
+```lean
+    {I : Set (Power R 1)} {G : Set (Power R 2)}
+```
+
+This is a continuation line of the surrounding declaration or proof. Its indentation tells Lean it belongs to the previous syntactic construct.
+
+### Line 632
+
+```lean
+    (hI : M.S 1 I) (hG : M.S 2 G) :
+```
+
+This line is part of a type signature. The expression after the colon is the result type that must be constructed.
+
+### Line 633
+
+```lean
+    M.S 1 (BadPoint1 D I G) := by
+```
+
+The declaration or local proof switches into tactic mode with `by`; the following indented tactic commands construct the required term.
+
+### Line 634
+
+```lean
+  simpa [BadPoint1] using
+```
+
+`simpa` simplifies both the supplied term and the goal, then uses the simplified supplied term to close the goal.
+
+### Line 635
+
+```lean
+    (M.existsLast_mem (n := 1) (m := 3)
+```
+
+This line supplies arguments to a previously mentioned theorem or structure field belonging to `M`.
+
+### Line 636
+
+```lean
+      (bad4_mem (R := R) (D := D) M hI hG))
+```
+
+This is a continuation line of the surrounding declaration or proof. Its indentation tells Lean it belongs to the previous syntactic construct.
+
+## Lines 638ff. The final set of continuity points
+
+### Line 638
+
+```lean
+def ContinuousPoints (D : DenseLinearOrderNoEndpoints R)
+```
+
+Starts the definition `ContinuousPoints`; it defines continuity points as points of `I` that are not bad. The declaration may span several following indented lines.
+
+### Line 639
+
+```lean
+    (I : Set (Power R 1)) (G : Set (Power R 2)) : Set (Power R 1) :=
+```
+
+The symbol `:=` says that the following expression is the value of the definition or proof being declared.
+
+### Line 640
+
+```lean
+  setInter I (setCompl (BadPoint1 D I G))
+```
+
+This line builds an intersection, corresponding to logical conjunction.
+
+### Line 642
+
+```lean
+theorem continuousPoints_mem (M : OMinimalStructure D)
+```
+
+Starts theorem `continuousPoints_mem`; it proves the final theorem: continuity points of a definable one-variable function are definable. A theorem has a proposition as its type, and the proof follows after `:= by` or after `:=`.
+
+### Line 643
+
+```lean
+    {I B : Set (Power R 1)}
+```
+
+This is a continuation line of the surrounding declaration or proof. Its indentation tells Lean it belongs to the previous syntactic construct.
+
+### Line 644
+
+```lean
+    (f : DefinableFunction M I B) :
+```
+
+This line is part of a type signature. The expression after the colon is the result type that must be constructed.
+
+### Line 645
+
+```lean
+    M.S 1 (ContinuousPoints D I
+```
+
+This line states that a particular set belongs to the definable family `M.S` in the indicated arity.
+
+### Line 646
+
+```lean
+      (FunctionGraph (R := R) (m := 1) (n := 1) (A := I) (B := B) f.toFun)) := by
+```
+
+The declaration or local proof switches into tactic mode with `by`; the following indented tactic commands construct the required term.
+
+### Line 647
+
+```lean
+  have hBad : M.S 1 (BadPoint1 D I
+```
+
+`have` introduces a local lemma or local named proof. The part after `:` is its type, and the proof comes after `:=` or `:= by`.
+
+### Line 648
+
+```lean
+      (FunctionGraph (R := R) (m := 1) (n := 1) (A := I) (B := B) f.toFun)) :=
+```
+
+The symbol `:=` says that the following expression is the value of the definition or proof being declared.
+
+### Line 649
+
+```lean
+    badPoint1_mem (R := R) (D := D) M f.domain_mem f.graph_mem
+```
+
+This is a continuation line of the surrounding declaration or proof. Its indentation tells Lean it belongs to the previous syntactic construct.
+
+### Line 650
+
+```lean
+  exact M.inter_mem f.domain_mem (M.compl_mem hBad)
+```
+
+`exact` closes the current goal by providing a term whose type is exactly the required proposition or data type.
+
+## Lines 652ff. Small sanity theorems
+
+### Line 652
+
+```lean
+theorem empty_definable (M : OMinimalStructure D) (n : Nat) :
+```
+
+Starts theorem `empty_definable`; it sanity check: the empty set is definable. A theorem has a proposition as its type, and the proof follows after `:= by` or after `:=`.
+
+### Line 653
+
+```lean
+    Definable M (setEmpty : Set (Power R n)) :=
+```
+
+The symbol `:=` says that the following expression is the value of the definition or proof being declared.
+
+### Line 654
+
+```lean
+  M.empty_mem n
+```
+
+This is a continuation line of the surrounding declaration or proof. Its indentation tells Lean it belongs to the previous syntactic construct.
+
+### Line 656
+
+```lean
+theorem order_definable (M : OMinimalStructure D) :
+```
+
+Starts theorem `order_definable`; it sanity check: the order relation is definable. A theorem has a proposition as its type, and the proof follows after `:= by` or after `:=`.
+
+### Line 657
+
+```lean
+    Definable M (fun p : Power R 2 => D.lt (Power.coord2_0 p) (Power.coord2_1 p)) :=
+```
+
+The symbol `:=` says that the following expression is the value of the definition or proof being declared.
+
+### Line 658
+
+```lean
+  M.lt_mem
+```
+
+This is a continuation line of the surrounding declaration or proof. Its indentation tells Lean it belongs to the previous syntactic construct.
+
+### Line 660
+
+```lean
+end OMinimalStructure
+```
+
+Closes the named namespace or section, returning to the outer naming scope.
+
+### Line 662
+
+```lean
+end OMinimal
+```
+
+Closes the named namespace or section, returning to the outer naming scope.
