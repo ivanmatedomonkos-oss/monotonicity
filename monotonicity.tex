@@ -1,0 +1,185 @@
+\documentclass{amsart}
+\usepackage{mathabx}
+\usepackage{amsmath,amscd}
+\usepackage{amsfonts,amssymb}
+\usepackage[all]{xy}
+\usepackage{enumerate}
+\usepackage{color}
+\usepackage{graphicx}
+\usepackage{tikz}
+\usetikzlibrary{intersections}
+\usetikzlibrary{calc, hobby}
+\numberwithin{equation}{subsection}
+\theoremstyle{plain}
+\newtheorem{thm}[subsection]{Theorem}
+\newtheorem{question}[subsection]{Question}
+\newtheorem{prop}[subsection]{Proposition}
+\newtheorem{lemma}[subsection]{Lemma}
+\newtheorem{cor}[subsection]{Corollary}
+\newtheorem{con}[subsection]{Conjecture}
+\theoremstyle{definition}
+\newtheorem*{ackn}{Acknowledgement}
+\newtheorem{defn}[subsection]{Definition}
+\newtheorem{example}[subsection]{Example}
+\newtheorem{examples}[subsection]{Examples}
+\newtheorem{notn}[subsection]{Notation}
+\newtheorem{cont}[subsection]{Contents}
+\theoremstyle{remark}
+\newtheorem{rem}[subsection]{Remark}
+\newtheorem{rems}[subsection]{Remarks}
+\def\noqed{\renewcommand{symbol}{}}
+\input cyracc.def
+\font\tencyr=wncyr10
+\font\eightcyr=wncyr8
+\def\cyr{\tencyr\cyracc}
+\def\cyri{\eightcyr\cyracc}
+\def\Sh{\mathrm{{\cyr Sh}}}
+\def\Shi{\mathrm{{\cyri Sh}}}
+\begin{document}
+\title{The monotonicity theorem in o-minimal geometry}
+\author{P\'al Ambrus and TEAM}
+\address{Geometria tansz\'ek, E\"oltv\"os Lor\'and Tudom\'anyegyetem, 1117 Budapest, P\'azm\'any P\'eter s\'et\'any 1/C}
+\email{ambrus.pal@elte.ttk.hu}
+\date{April 22, 2026.}
+\maketitle
+
+\begin{defn} A dense linear order without endpoints is an ordered pair
+$\mathcal{R} =(R, <)$, where $R$ is a set and $<$ is a binary relation on $R$, satisfying the following axioms:
+\begin{enumerate}
+\item \textbf{Strict Linear Order}:
+\begin{itemize}
+\item $\forall x \in L, \neg(x < x)$ (Irreflexivity)
+\item $\forall x, y, z \in L, (x < y \land y < z) \to x < z$ (Transitivity)
+\item $\forall x, y \in L$, exactly one of $x < y$, $y < x$, or $x = y$ holds (Trichotomy)
+\end{itemize}
+\item \textbf{Density}:
+\begin{itemize}
+\item $\forall x, y \in L, (x < y) \to \exists z \in L, (x < z \land z < y)$
+\end{itemize}
+\item \textbf{No Endpoints}:
+\begin{itemize}
+\item $\forall x \in L, \exists y \in L, (y < x)$ (No left endpoint)
+\item $\forall x \in L, \exists y \in L, (x < y)$ (No right endpoint)
+\end{itemize}
+\end{enumerate}
+\end{defn}
+\begin{defn} Let $\mathcal{R}=(R,<)$ be a dense linear order without endpoints. An \textbf{o-minimal structure} on $R$ is a structure $\mathcal{S} = \{S_n\}_{n \in \mathbb{N}}$, where $S_n$ is a collection of subsets of $R^n$ satisfying the following axioms:
+\begin{enumerate}
+\item \textbf{Structure Axioms:}
+\begin{enumerate}
+\item $S_n$ is a Boolean subalgebra of $\mathcal{P}(R^n)$ (closed under union, intersection, complement, and contains the empty set).
+\item $S_n$ contains all diagonal sets, i.e., sets of the form $\{(x_1, \dots, x_n) \in R^n : x_i = x_j\}$ for any $1 \leq i < j \leq n$.
+\item $S_n$ is closed under Cartesian products ($A \in S_n, B \in S_m \implies A \times B \in S_{n+m}$).
+\item $S_n$ is closed under coordinate projections ($A \in S_{n+1} \implies \pi(A) \in S_n$, where $\pi: R^{n+1} \to R^n$ is the projection on one of the coordinates).
+\item The relation $<$ is in $S_2$ (i.e., the set $\{(x,y) \in R^2 : x < y\}$ is in $S_2$).
+\end{enumerate}
+\item \textbf{O-minimality Axiom:}
+The set $S_1$ consists of exactly the finite unions of points and open intervals $\{x \in R : a < x < b\}$, where $a, b \in R \cup \{-\infty, +\infty\}$.
+\end{enumerate}
+We say that a subset of $R^n$ is definable (with respect to $\mathcal S$) if it is an element of $S_n$. 
+\end{defn}
+\begin{defn} Let $\mathcal{M} = (R, <, \{S_n\}_{n \in \mathbb{N}})$ be an $o$-minimal structure. Let $A \subseteq R^m$ and $B\subseteq R^n$ be definable. A function $f: A \to B$ is said to be a \textbf{definable function} if its graph,
+\[
+\Gamma(f) = \{(\bar{x}, f(\bar{x})) \in R^m \times R^n : \bar{x} \in A\},
+\]
+is a definable subset of $R^{m+n}$.
+\end{defn}
+\begin{thm}[Monotonicity Theorem] Let $f:(a,b) \to R$ be a definable function on the interval $(a,b)$. Then there are points
+\[
+a = a_0 < a_1 < \cdots < a_k = b
+\]
+such that on each subinterval $(a_i, a_{i+1})$,
+the function is either constant, or strictly monotone and continuous.
+\end{thm}
+\begin{proof} We derive this from the three lemmas below. In these lemmas we consider a definable function $f:I \to R$ on an interval $I$.
+\begin{lemma}
+There is a subinterval of $I$ on which $f$ is constant or injective.
+\end{lemma}
+
+\begin{lemma}
+If $f$ is injective, then $f$ is strictly monotone on a subinterval of $I$.
+\end{lemma}
+
+\begin{lemma}
+If $f$ is strictly monotone, then $f$ is continuous on a subinterval of $I$.
+\end{lemma}
+These lemmas imply the monotonicity theorem as follows: let
+\[
+\begin{aligned}
+X := \{x \in (a,b)\mid \text{\ } & \text{on some subinterval of } (a,b) \text{ containing } x \text{ the function } f \\
+& \text{is either constant, or strictly monotone and continuous}\}.
+\end{aligned}
+\]
+Now $(a,b) - X$ must be finite, since otherwise it would contain an interval $I$; applying successively Lemmas 1, 2, and 3 we can make $I$ so small that $f$ is either constant, or strictly monotone and continuous, on $I$. But then $I \subseteq X$, a contradiction.  Since $(a,b) - X$ is finite, we can reduce the proof of the theorem to the case that $(a,b) = X$, by replacing $(a,b)$ by each of the finitely many intervals of which the open set $X$ consists. In particular, we may assume that $f$ is continuous. By splitting up $(a,b)$ further we can reduce to one of the following three cases.
+\begin{enumerate}
+\item[\textbf{Case 1.}] For all $x \in (a,b)$, $f$ is constant on some neighborhood of $x$.
+
+\item[\textbf{Case 2.}] For all $x \in (a,b)$, $f$ is strictly increasing on some neighborhood of $x$.
+
+\item[\textbf{Case 3.}] For all $x \in (a,b)$, $f$ is strictly decreasing on some neighborhood of $x$.
+\end{enumerate}
+\noindent\textbf{Case 1.} Take $x_0 \in (a,b)$ and put
+\[ s := \sup\{x : x_0 < x < b, \; f \text{ is constant on } [x_0, x)\}. \]
+Then $s = b$, since $s < b$ implies that $f$ is constant on some neighborhood of $s$, contradiction. From $s = b$ it follows that $f$ is constant on $[x_0, b)$. Similarly, we prove that $f$ is constant on $(a, x_0]$. Therefore $f$ is constant on $(a, b)$. 
+
+\noindent\textbf{Case 2.} Take $x_0 \in (a,b)$ and put
+\[ s := \sup\{x : x_0 < x < b, \; f \text{ is strictly increasing on } [x_0, x)\}. \]
+Then $s = b$, since $s < b$ leads to a contradiction as in case 1. Therefore $f$ is strictly increasing on $[x_0, b)$. Similarly, $f$ is strictly increasing on $(a, x_0]$. Hence $f$ is strictly
+increasing on $(a, b)$.
+
+\noindent\textbf{Case 3.} This is handled in the same way as case 2.
+
+We now prove the lemmas.
+\begin{proof}[Proof of Lemma 1.] If some $y \in R$ had infinite preimage $f^{-1}(y)$, then this preimage would contain a subinterval of $I$ and $f$ would take the constant value $y$ on that subinterval. So we may assume that each $y \in R$ has finite preimage. Then $f(I)$ is infinite, and so contains an interval $J$. Define an ``inverse'' $g: J \to I$ by
+\[ g(y) := \min\{x \in I : f(x) = y\}. \]
+Since $g$ is injective by definition, $g(J)$ is infinite, and hence $g(J)$ contains a subinterval of $I$, and $f$ is necessarily injective on this subinterval.
+\end{proof}
+\begin{proof}[Proof of Lemma 2.] Let us write $I = (a,b)$. We assume here that $f$ is injective and have to show that $f$ is strictly monotone on some subinterval of $I$. For each $x\in I$ the interval $(a,x)$ is a disjoint union of two subsets,
+\[
+(a,x)= \{ y \in (a,x) : f(y) < f(x)\}\cup \{y\in (a,x) : f(y) > f(x)\},
+\]
+so one of the parts contains an interval $(c,x), a < c < x$. The interval $(x,b)$ breaks up similarly. This shows that each $x\in I$ satisfies exactly one of the following four formulas:
+
+\[
+\Phi_{++}(x) := \exists c_1,c_2\in I [c_1 < x < c_2 \& \forall y\in (c_1,x) : f(y) > f(x) \& \forall y\in (x,c_2) : f(y) > f(x)],
+\]
+
+\[
+\Phi_{+-}(x) := \exists c_1,c_2\in I [c_1 < x < c_2 \& \forall y\in (c_1,x) : f(y) > f(x) \& \forall y\in (x,c_2) : f(y) < f(x)],
+\]
+and $\Phi_{-+}(x)$ and $\Phi_{--}(x)$, which are defined similarly.
+\\ \\ So $I$ contains a subinterval all of whose points satisfy the same formula. Replacing $I$ by this subinterval, and $f$ by its restriction to that subinterval, we may assume that all points satisfy the same formula. This leads to four cases.
+\\\\EASY CASE. $\Phi_{-+}(x)$ for all $x$ in $I$.
+\\\\ For each $x$ in $I$ define $s(x) := \sup\{s\in (x,b) : f > f(x) \:\: on \:\: (x,s] \}$. Then clearly $s(x) = b$, since $s(x) < b$ contradicts $\Phi_{-+}(s(x))$. Therefore $f$ is strictly increasing on $I$.
+\\\\ The case that $\Phi_{+-}(x)$ for all $x$ in $I$ leads similarly to the conclusion that $f$ is strictly decreasing on $I$.
+
+\noindent\textsc{Difficult case.} $\Phi_{++}(x)$ for all $x$ in $I$.
+
+\noindent Let $B := \{x \in I : \forall y \in I\ (y > x \text{ implies } f(y) > f(x))\}$. If $B$ is infinite then $B$ contains an interval, and on this interval $f$ is strictly increasing, and we are done. So let us assume that $B$ is finite. Passing to a subinterval to the right of all points of $B$ we may assume
+\begin{equation}\tag{$\ast$}
+\forall x \in I\ \exists y \in I\ (y > x \ \&\ f(y) < f(x)).
+\end{equation}
+Let $c \in I$. We claim that for all large enough $y$ in $I$ we have $f(y) < f(c)$. Otherwise, we would have $f(y) > f(c)$ for all large enough $y \in (c, b)$. Take then $d \in [c, b)$ minimal such that $\forall y\ (d < y < b \text{ implies } f(y) > f(c))$.
+
+\noindent If $f(d) > f(c)$ then $d$ would not be minimal since $\Phi_{++}(d)$. So $f(d) < f(c)$. But by $(*)$, there is $e$ with $d < e < b$ and $f(e) < f(d)$, so $f(e) < f(c)$, contradiction. This proves the claim that $f(y) < f(c)$ for all large enough $y \in I$.
+
+\noindent Define $y(c)$ as the least element of $[c, b)$ for which $f(y) < f(c)$ if $y(c) < y < b$. Note that $\Phi_{++}(c)$ gives $c < y(c)$ and $f(y(c)) < f(c)$. Minimality of $y(c)$ clearly implies that $y(c)$ satisfies the following formula $\Psi_{+-}(v)$:
+
+\[ \Psi_{+-}(v) := \exists v_1, v_2 \in I\ [v_1 < v < v_2 \ \& \ \forall z_1, z_2\ (v_1 < z_1 < v < z_2 < v_2 \rightarrow f(z_1) > f(z_2))]. \]
+
+\noindent Since $c$ was arbitrary we have shown $\forall c \in I\ \exists v \in I\ (v > c \ \& \ \Psi_{+-}(v))$.
+
+\noindent Therefore $\Psi_{+-}(v)$ holds for all $v$ in an interval of the form $(d, b)$, $d \in I$. Replacing $I$ by this subinterval we may as well assume that $\Psi_{+-}(v)$ holds on all of $I$.
+
+\noindent A completely similar argument shows that we can pass to a still smaller subinterval on which $\Psi_{-+}$ (defined in the obvious way) holds. But this is a contradiction since we cannot simultaneously have $\Psi_{+-}(v)$ and $\Psi_{-+}(v)$. The case that $\Phi_{--}(x)$ holds for all $x$ in $I$ is completely similar to the case we just handled. This finishes the proof of lemma 2. \hfill $\square$
+
+
+\end{proof}
+\begin{proof}[Proof of Lemma 3.] Let us assume that the strictly monotone function $f$ is strictly increasing. (The case that $f$ is strictly decreasing goes the same way.) Since $f(I)$ is infinite there is an interval $J \subseteq f(I)$. Take two points $r, s \in J$, $r < s$, and let $c, d$ be their preimages: $f(c) = r$, $f(d) = s$, $c < d$. Clearly $f$ defines an order preserving bijection of $(c, d)$ onto $(r, s)$. But the topology is defined in terms of the order,
+hence $f$ is continuous on $(c, d)$.
+\end{proof}
+This finishes the proof of the lemmas and hence the proof of the monotonicity
+theorem is complete.
+\end{proof}
+\end{document}
+
